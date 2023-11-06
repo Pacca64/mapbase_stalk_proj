@@ -47,8 +47,12 @@ static const Vector g_bludgeonMins(-BLUDGEON_HULL_DIM, -BLUDGEON_HULL_DIM, -BLUD
 static const Vector g_bludgeonMaxs(BLUDGEON_HULL_DIM, BLUDGEON_HULL_DIM, BLUDGEON_HULL_DIM);
 
 //special convars for us
-ConVar    sk_plr_dmg_stalkerwep		( "sk_plr_dmg_stalkerwep","0");
-ConVar    sk_npc_dmg_stalkerwep		( "sk_npc_dmg_stalkerwep","0");
+ConVar    sk_plr_dmg_stalkerwep_melee	( "sk_plr_dmg_stalkerwep_melee","0");
+ConVar    sk_npc_dmg_stalkerwep_melee	( "sk_npc_dmg_stalkerwep_melee","0");
+
+ConVar    sk_plr_dmg_stalkerwep_beam_easy	("sk_plr_dmg_stalkerwep_beam_easy", "0");
+ConVar    sk_plr_dmg_stalkerwep_beam_normal	("sk_plr_dmg_stalkerwep_beam_normal", "0");
+ConVar    sk_plr_dmg_stalkerwep_beam_hard	("sk_plr_dmg_stalkerwep_beam_hard", "0");
 
 //-----------------------------------------------------------------------------
 // CWeaponStalkerWep
@@ -96,6 +100,9 @@ IMPLEMENT_ACTTABLE(CWeaponStalkerWep);
 
 BEGIN_DATADESC(CWeaponStalkerWep)
 	DEFINE_FIELD(m_nBulletType, FIELD_INTEGER),
+	DEFINE_FIELD(m_fNextDamageTime, FIELD_FLOAT),
+	DEFINE_FIELD(m_bPlayingHitWall, FIELD_FLOAT),
+	DEFINE_FIELD(m_bPlayingHitFlesh, FIELD_FLOAT),
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
@@ -104,6 +111,8 @@ END_DATADESC()
 CWeaponStalkerWep::CWeaponStalkerWep( void )
 {
 	m_nBulletType = -1;
+	m_bPlayingHitWall = false;
+	m_bPlayingHitFlesh = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -114,9 +123,9 @@ CWeaponStalkerWep::CWeaponStalkerWep( void )
 float CWeaponStalkerWep::GetDamageForActivity( Activity hitActivity )
 {
 	if ( ( GetOwner() != NULL ) && ( GetOwner()->IsPlayer() ) )
-		return sk_plr_dmg_stalkerwep.GetFloat();
+		return sk_plr_dmg_stalkerwep_melee.GetFloat();
 
-	return sk_npc_dmg_stalkerwep.GetFloat();
+	return sk_npc_dmg_stalkerwep_melee.GetFloat();
 }
 
 //-----------------------------------------------------------------------------
@@ -211,11 +220,16 @@ void CWeaponStalkerWep::PrimaryAttack()
 	gamestats->Event_WeaponFired(pPlayer, true, GetClassname());
 
 	trace_t tr;
-	UTIL_TraceLine(startPos, startPos + AimDir * MAX_STALKER_FIRE_RANGE, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+	UTIL_TraceLine(startPos, startPos + AimDir * MAX_STALKER_FIRE_RANGE, MASK_SHOT, GetOwner(), COLLISION_GROUP_NONE, &tr);
 
 	Vector vecShootOrigin, vecShootDir;
 	vecShootOrigin = GetOwner()->Weapon_ShootPosition();
 	DrawBeam(vecShootOrigin, tr.endpos, 15.5);
+
+	if (tr.DidHit()) {
+		//Run ported attack code from stalker npc.
+		DrawAttackBeam();
+	}
 }
 
 //------------------------------------------------------------------------------
@@ -246,7 +260,7 @@ void CWeaponStalkerWep::SecondaryAttack()
 	Activity nHitActivity = ACT_VM_HITCENTER;
 
 	// Like bullets, bludgeon traces have to trace against triggers.
-	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_CLUB);
+	CTakeDamageInfo triggerInfo(GetOwner(), GetOwner(), GetDamageForActivity(nHitActivity), DMG_SLASH);
 	triggerInfo.SetDamagePosition(traceHit.startpos);
 	triggerInfo.SetDamageForce(forward);
 	TraceAttackToTriggers(triggerInfo, traceHit.startpos, traceHit.endpos, forward);
@@ -370,7 +384,7 @@ void CWeaponStalkerWep::HandleAnimEventMeleeHit( animevent_t *pEvent, CBaseComba
 	Vector vecEnd;
 	VectorMA( pOperator->Weapon_ShootPosition(), 50, vecDirection, vecEnd );
 	CBaseEntity *pHurt = pOperator->CheckTraceHullAttack( pOperator->Weapon_ShootPosition(), vecEnd, 
-		Vector(-16,-16,-16), Vector(36,36,36), sk_npc_dmg_stalkerwep.GetFloat(), DMG_CLUB, 0.75 );
+		Vector(-16,-16,-16), Vector(36,36,36), sk_npc_dmg_stalkerwep_melee.GetFloat(), DMG_SLASH, 0.75 );
 	
 	// did I hit someone?
 	if ( pHurt )
@@ -448,6 +462,7 @@ void CWeaponStalkerWep::DrawBeam(const Vector& startPos, const Vector& endPos, f
 // Purpose: 
 // Input  : &tr - used to figure out where to do the effect
 //          nDamageType - ???
+// The laser pistol guide wanted this here, but it seems to never be called?
 //-----------------------------------------------------------------------------
 void CWeaponStalkerWep::DoImpactEffect(trace_t& tr, int nDamageType)
 {
@@ -460,4 +475,114 @@ void CWeaponStalkerWep::DoImpactEffect(trace_t& tr, int nDamageType)
 		m_nBulletType = GetAmmoDef()->Index("GaussEnergy");
 		UTIL_ImpactTrace(&tr, m_nBulletType);
 	}
+}
+
+
+//------------------------------------------------------------------------------
+// Purpose : Heavily modified from CNPC_Stalker::DrawAttackBeam. Inflicts damage and does some sounds and effects.
+// Input   :
+// Output  :
+//------------------------------------------------------------------------------
+void CWeaponStalkerWep::DrawAttackBeam(void)
+{
+	// ---------------------------------------------
+	//	Get beam end point
+	// ---------------------------------------------
+	Vector vecSrc = ToBasePlayer(GetOwner())->Weapon_ShootPosition();
+	Vector m_vLaserDir = ToBasePlayer(GetOwner())->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
+	trace_t tr;
+	UTIL_TraceLine(vecSrc, vecSrc + m_vLaserDir * MAX_STALKER_FIRE_RANGE, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+
+	//CalcBeamPosition();
+
+	bool bInWater = (UTIL_PointContents(tr.endpos) & MASK_WATER) ? true : false;
+
+	// --------------------------------------------
+	//  Play burn sounds
+	// --------------------------------------------
+	CBaseCombatCharacter* pBCC = ToBaseCombatCharacter(tr.m_pEnt);
+	if (pBCC)
+	{
+		if (gpGlobals->curtime > m_fNextDamageTime)
+		{
+			ClearMultiDamage();
+
+			float damage = sk_plr_dmg_stalkerwep_beam_easy.GetFloat();//Default to easy if invalid.
+
+			//set damage based on difficulty, based on 3 beam damage values stalkers can have.
+			switch (g_pGameRules->GetSkillLevel())
+			{
+			case SKILL_EASY:	damage = sk_plr_dmg_stalkerwep_beam_easy.GetFloat(); break;
+			case SKILL_MEDIUM:	damage = sk_plr_dmg_stalkerwep_beam_normal.GetFloat(); break;
+			case SKILL_HARD:	damage = sk_plr_dmg_stalkerwep_beam_hard.GetFloat(); break;
+			}
+
+			CTakeDamageInfo info(this, GetOwner(), damage, DMG_SHOCK);	//Inflictor, Attacker, Damage, Damage type
+			CalculateMeleeDamageForce(&info, m_vLaserDir, tr.endpos);	//This is indeed used by the Stalker laser.
+			pBCC->DispatchTraceAttack(info, m_vLaserDir, &tr);
+			ApplyMultiDamage();
+			m_fNextDamageTime = gpGlobals->curtime + 0.1;
+		}
+		if (pBCC->Classify() != CLASS_BULLSEYE)
+		{
+			if (!m_bPlayingHitFlesh)
+			{
+				CPASAttenuationFilter filter(tr.endpos, "NPC_Stalker.BurnFlesh");
+				filter.MakeReliable();
+
+				EmitSound(filter, -1, "NPC_Stalker.BurnFlesh", &tr.endpos);
+				m_bPlayingHitFlesh = true;
+			}
+			if (m_bPlayingHitWall)
+			{
+				StopSound(-1, "NPC_Stalker.BurnWall");
+				m_bPlayingHitWall = false;
+			}
+
+			tr.endpos.z -= 24.0f;
+			if (!bInWater)
+			{
+				//DoSmokeEffect(tr.endpos + tr.plane.normal * 8);	//only plays in water. Come back to this, should be implemented.
+			}
+		}
+	}
+
+	//hardcoded bullshit for bullseyes, BUT the actual decals are drawn here!!!
+	//Actually, should work anyways, will leave as is.
+	if (!pBCC || pBCC->Classify() == CLASS_BULLSEYE)
+	{
+		if (!m_bPlayingHitWall)
+		{
+			CPASAttenuationFilter filter(tr.endpos, "NPC_Stalker.BurnWall");
+			filter.MakeReliable();
+
+			EmitSound(filter, -1, "NPC_Stalker.BurnWall", &tr.endpos);
+			m_bPlayingHitWall = true;
+		}
+		if (m_bPlayingHitFlesh)
+		{
+			StopSound(-1, "NPC_Stalker.BurnFlesh");
+			m_bPlayingHitFlesh = false;
+		}
+
+		UTIL_DecalTrace(&tr, "RedGlowFade");
+		UTIL_DecalTrace(&tr, "FadingScorch");
+
+		tr.endpos.z -= 24.0f;
+		if (!bInWater)
+		{
+			//DoSmokeEffect(tr.endpos + tr.plane.normal * 8);
+		}
+	}
+
+	if (bInWater)
+	{
+		UTIL_Bubbles(tr.endpos - Vector(3, 3, 3), tr.endpos + Vector(3, 3, 3), 10);
+	}
+
+	//commented out by valve. Neat.
+	/*
+	CBroadcastRecipientFilter filter;
+	TE_DynamicLight( filter, 0.0, EyePosition(), 255, 0, 0, 5, 0.2, 0 );
+	*/
 }

@@ -58,7 +58,15 @@ public:
 	void   	DrawBeam(const Vector& startPos, const Vector& endPos, float width);
 	void	DoImpactEffect(trace_t& tr, int nDamageType);
 
-	int	m_nBulletType;
+	void DrawAttackBeam(void);
+
+	int	m_nBulletType;	//probably will go unused
+
+	//Taken from stalker code
+	float				m_fNextDamageTime;
+
+	float				m_bPlayingHitWall;
+	float				m_bPlayingHitFlesh;
 
 private:
 	// Animation event handlers
