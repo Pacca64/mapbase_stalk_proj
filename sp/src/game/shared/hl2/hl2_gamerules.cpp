@@ -392,6 +392,9 @@ ConVar	sk_max_gauss_round		( "sk_max_gauss_round", "0", FCVAR_REPLICATED );
 ConVar	sk_npc_dmg_gunship			( "sk_npc_dmg_gunship", "0", FCVAR_REPLICATED );
 ConVar	sk_npc_dmg_gunship_to_plr	( "sk_npc_dmg_gunship_to_plr", "0", FCVAR_REPLICATED );
 
+
+ConVar	sk_max_stalkerwep("sk_max_stalkerwep", "0", FCVAR_REPLICATED);
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : iDmgType - 
@@ -2205,6 +2208,8 @@ CAmmoDef *GetAmmoDef()
 #ifdef MAPBASE
 		def.AddAmmoType("slam",				DMG_BURN,					TRACER_NONE,			0,			0,			5,			0,							0 );
 #endif
+
+		def.AddAmmoType("stalker_energy", DMG_ENERGYBEAM, TRACER_BEAM, "sk_plr_dmg_stalkerwep", "sk_npc_dmg_stalkerwep", "sk_max_stalkerwep", BULLET_IMPULSE(150, 1225), 0);
 	}
 
 	return &def;

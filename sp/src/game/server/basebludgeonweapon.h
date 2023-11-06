@@ -46,12 +46,13 @@ public:
 
 protected:
 	virtual	void	ImpactEffect( trace_t &trace );
+	//these 3 functions have been moved to make life easier.
+	Activity		ChooseIntersectionPointAndActivity(trace_t& hitTrace, const Vector& mins, const Vector& maxs, CBasePlayer* pOwner);
+	void			Hit(trace_t& traceHit, Activity nHitActivity, bool bIsSecondary);
+	bool			ImpactWater(const Vector& start, const Vector& end);
 
 private:
-	bool			ImpactWater( const Vector &start, const Vector &end );
 	void			Swing( int bIsSecondary );
-	void			Hit( trace_t &traceHit, Activity nHitActivity, bool bIsSecondary );
-	Activity		ChooseIntersectionPointAndActivity( trace_t &hitTrace, const Vector &mins, const Vector &maxs, CBasePlayer *pOwner );
 };
 
 #endif

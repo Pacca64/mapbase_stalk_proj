@@ -46,4 +46,6 @@ STUB_WEAPON_CLASS( weapon_oldmanharpoon, WeaponOldManHarpoon, C_WeaponCitizenPac
 #endif
 #endif
 
+STUB_WEAPON_CLASS(weapon_StalkerWep, WeaponStalkerWep, C_BaseHLBludgeonWeapon);
+
 
