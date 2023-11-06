@@ -23,13 +23,10 @@
 #include "rumble_shared.h"	//need for melee secondary fire
 #include "util_shared.h"	//for access to trace line
 #include "bspflags.h"	//for access to trace line flags
+#include "Sprite.h"		//sprites
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-
-// This determines the sprite used by the laser beam
-#define PHYSCANNON_BEAM_SPRITE "sprites/orangelight1.vmt"
 
 // Stalker Constants copied over.
 #define	MIN_STALKER_FIRE_RANGE		64
@@ -103,6 +100,7 @@ BEGIN_DATADESC(CWeaponStalkerWep)
 	DEFINE_FIELD(m_fNextDamageTime, FIELD_FLOAT),
 	DEFINE_FIELD(m_bPlayingHitWall, FIELD_FLOAT),
 	DEFINE_FIELD(m_bPlayingHitFlesh, FIELD_FLOAT),
+	DEFINE_FIELD(m_pLightGlow, FIELD_CLASSPTR),
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
@@ -436,7 +434,7 @@ void CWeaponStalkerWep::DrawBeam(const Vector& startPos, const Vector& endPos, f
 	UTIL_Tracer(startPos, endPos, 0, TRACER_DONT_USE_ATTACHMENT, 6500, false, "GaussTracer");
 
 	//Draw the main beam shaft
-	CBeam* pBeam = CBeam::BeamCreate(PHYSCANNON_BEAM_SPRITE, 15.5);
+	CBeam* pBeam = CBeam::BeamCreate("sprites/laser.vmt", 2.0);
 
 	// It starts at startPos
 	pBeam->SetStartPos(startPos);
@@ -457,26 +455,31 @@ void CWeaponStalkerWep::DrawBeam(const Vector& startPos, const Vector& endPos, f
 
 	// The beam should only exist for a very short time
 	pBeam->LiveForTime(0.1f);
-}
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &tr - used to figure out where to do the effect
-//          nDamageType - ???
-// The laser pistol guide wanted this here, but it seems to never be called?
-//-----------------------------------------------------------------------------
-void CWeaponStalkerWep::DoImpactEffect(trace_t& tr, int nDamageType)
-{
-	//Draw our beam
-	DrawBeam(tr.startpos, tr.endpos, 15.5);
-	if ((tr.surface.flags & SURF_SKY) == false)
+
+	pBeam->SetBrightness(255);
+	pBeam->SetNoise(0);
+
+	//set damage based on difficulty, based on 3 beam damage values stalkers can have.
+	switch (g_pGameRules->GetSkillLevel())
 	{
-		CPVSFilter filter(tr.endpos);
-		te->GaussExplosion(filter, 0.0f, tr.endpos, tr.plane.normal, 0);
-		m_nBulletType = GetAmmoDef()->Index("GaussEnergy");
-		UTIL_ImpactTrace(&tr, m_nBulletType);
+	case SKILL_EASY:		//STALKER_BEAM_HIGH
+		pBeam->SetColor(255, 0, 0);
+		m_pLightGlow = CSprite::SpriteCreate("sprites/redglow1.vmt", GetAbsOrigin(), FALSE);
+		break;
+	case SKILL_MEDIUM:	//STALKER_BEAM_MED
+		pBeam->SetColor(255, 50, 0);
+		m_pLightGlow = CSprite::SpriteCreate("sprites/orangeglow1.vmt", GetAbsOrigin(), FALSE);
+		break;
+	case SKILL_HARD:
+		pBeam->SetColor(255, 150, 0);
+		m_pLightGlow = CSprite::SpriteCreate("sprites/yellowglow1.vmt", GetAbsOrigin(), FALSE);
+		break;
 	}
+
+	UTIL_Remove(m_pLightGlow);
 }
 
+//Ported routines from npc_stalker
 
 //------------------------------------------------------------------------------
 // Purpose : Heavily modified from CNPC_Stalker::DrawAttackBeam. Inflicts damage and does some sounds and effects.

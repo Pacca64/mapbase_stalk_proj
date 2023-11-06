@@ -3,6 +3,7 @@
 // Purpose:
 //
 //=============================================================================//
+#include "Sprite.h"		//sprites
 
 #ifndef WEAPON_StalkerWep_H
 #define WEAPON_StalkerWep_H
@@ -56,7 +57,6 @@ public:
 #endif
 
 	void   	DrawBeam(const Vector& startPos, const Vector& endPos, float width);
-	void	DoImpactEffect(trace_t& tr, int nDamageType);
 
 	void DrawAttackBeam(void);
 
@@ -67,6 +67,7 @@ public:
 
 	float				m_bPlayingHitWall;
 	float				m_bPlayingHitFlesh;
+	CSprite*			m_pLightGlow;
 
 private:
 	// Animation event handlers
