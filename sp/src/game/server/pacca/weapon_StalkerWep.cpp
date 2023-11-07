@@ -27,6 +27,7 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+#include <string>
 
 // Stalker Constants copied over.
 #define	MIN_STALKER_FIRE_RANGE		64
@@ -50,6 +51,9 @@ ConVar    sk_npc_dmg_stalkerwep_melee	( "sk_npc_dmg_stalkerwep_melee","0");
 ConVar    sk_plr_dmg_stalkerwep_beam_easy	("sk_plr_dmg_stalkerwep_beam_easy", "0");
 ConVar    sk_plr_dmg_stalkerwep_beam_normal	("sk_plr_dmg_stalkerwep_beam_normal", "0");
 ConVar    sk_plr_dmg_stalkerwep_beam_hard	("sk_plr_dmg_stalkerwep_beam_hard", "0");
+
+//Pacca defines
+#define STALKERWEP_BEAMSPRITE_DIST	15
 
 //-----------------------------------------------------------------------------
 // CWeaponStalkerWep
@@ -100,6 +104,7 @@ BEGIN_DATADESC(CWeaponStalkerWep)
 	DEFINE_FIELD(m_fNextDamageTime, FIELD_FLOAT),
 	DEFINE_FIELD(m_bPlayingHitWall, FIELD_FLOAT),
 	DEFINE_FIELD(m_bPlayingHitFlesh, FIELD_FLOAT),
+	DEFINE_FIELD(m_fLightGlowLastUpdateTime, FIELD_FLOAT),
 	DEFINE_FIELD(m_pLightGlow, FIELD_CLASSPTR),
 END_DATADESC()
 
@@ -111,6 +116,84 @@ CWeaponStalkerWep::CWeaponStalkerWep( void )
 	m_nBulletType = -1;
 	m_bPlayingHitWall = false;
 	m_bPlayingHitFlesh = false;
+	m_fLightGlowTrans = 200;
+
+	SetThink(&CWeaponStalkerWep::Think);
+	SetNextThink(gpGlobals->curtime + 0.01);
+}
+
+//-----------------------------------------------------------------------------
+// Makes sprite fade away over time.
+//-----------------------------------------------------------------------------
+void CWeaponStalkerWep::Think(void) {
+
+	if (gpGlobals->curtime > m_fLightGlowLastUpdateTime + 0.01)//only update lights in 0.01 time intervals
+	{
+		m_fLightGlowLastUpdateTime = gpGlobals->curtime;	//update for next light interval
+			if (m_fLightGlowTrans > 0) {
+				m_fLightGlowTrans -= 5;
+				if (m_fLightGlowTrans <= 0) {
+					m_fLightGlowTrans = 0;
+				}
+			}
+
+		if (m_pLightGlow) {
+			m_pLightGlow->SetRenderColorA(m_fLightGlowTrans);
+		}
+	}
+
+	SetThink(&CWeaponStalkerWep::Think);
+	SetNextThink(gpGlobals->curtime);	//think asap
+
+	CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
+
+	if (pPlayer == NULL)
+		return;
+
+	Vector startPos = pPlayer->Weapon_ShootPosition();
+	Vector AimDir = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
+
+	startPos = startPos + AimDir * STALKERWEP_BEAMSPRITE_DIST;
+	m_pLightGlow->Teleport(&startPos,NULL,NULL);	//teleport light asap
+	m_pLightGlow->SetAbsOrigin(startPos);	//teleport light asap
+}
+
+void CWeaponStalkerWep::OnPickedUp(CBaseCombatCharacter* pNewOwner) {
+	BaseClass::OnPickedUp(pNewOwner);
+
+	CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
+
+	if (pPlayer == NULL)
+		return;
+
+	Vector startPos = pPlayer->Weapon_ShootPosition();
+	Vector AimDir = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
+
+	Vector spritePos = startPos + AimDir * STALKERWEP_BEAMSPRITE_DIST;
+
+	//set damage based on difficulty, based on 3 beam damage values stalkers can have.
+	switch (g_pGameRules->GetSkillLevel())
+	{
+	case SKILL_EASY:		//STALKER_BEAM_HIGH
+		m_pLightGlow = CSprite::SpriteCreate("sprites/redglow1.vmt", spritePos, FALSE);
+		break;
+	case SKILL_MEDIUM:	//STALKER_BEAM_MED
+		m_pLightGlow = CSprite::SpriteCreate("sprites/orangeglow1.vmt", spritePos, FALSE);
+		break;
+	case SKILL_HARD:
+		m_pLightGlow = CSprite::SpriteCreate("sprites/yellowglow1.vmt", spritePos, FALSE);
+		break;
+	default:
+		m_pLightGlow = CSprite::SpriteCreate("sprites/redglow1.vmt", spritePos, FALSE);
+		break;
+	}
+
+	m_pLightGlow->SetRenderMode(kRenderGlow);
+	m_pLightGlow->SetScale(0.6);
+	m_pLightGlow->SetParent(pPlayer);	//not a perfect solution, but makes eye tracking far more reliable when moving left or right.
+
+	//m_pLightGlow->SetParent(pPlayer->GetViewModel(), -1);	//Parent sprite to viewmodel
+	//m_pLightGlow->TurnOn();
 }
 
 //-----------------------------------------------------------------------------
@@ -221,7 +304,7 @@ void CWeaponStalkerWep::PrimaryAttack()
 	UTIL_TraceLine(startPos, startPos + AimDir * MAX_STALKER_FIRE_RANGE, MASK_SHOT, GetOwner(), COLLISION_GROUP_NONE, &tr);
 
 	Vector vecShootOrigin, vecShootDir;
-	vecShootOrigin = GetOwner()->Weapon_ShootPosition();
+	vecShootOrigin = startPos + AimDir * STALKERWEP_BEAMSPRITE_DIST;
 	DrawBeam(vecShootOrigin, tr.endpos, 15.5);
 
 	if (tr.DidHit()) {
@@ -444,7 +527,7 @@ void CWeaponStalkerWep::DrawBeam(const Vector& startPos, const Vector& endPos, f
 	pBeam->PointEntInit(endPos, this);
 
 	// This makes it so that the laser appears to come from the muzzle of the pistol
-	pBeam->SetEndAttachment(LookupAttachment("Muzzle"));
+	//pBeam->SetEndAttachment(LookupAttachment("Muzzle"));
 	pBeam->SetWidth(width);
 	//	pBeam->SetEndWidth( 0.05f );
 
@@ -454,7 +537,7 @@ void CWeaponStalkerWep::DrawBeam(const Vector& startPos, const Vector& endPos, f
 	pBeam->RelinkBeam();
 
 	// The beam should only exist for a very short time
-	pBeam->LiveForTime(0.1f);
+	pBeam->LiveForTime(0.05f);
 
 	pBeam->SetBrightness(255);
 	pBeam->SetNoise(0);
@@ -464,19 +547,26 @@ void CWeaponStalkerWep::DrawBeam(const Vector& startPos, const Vector& endPos, f
 	{
 	case SKILL_EASY:		//STALKER_BEAM_HIGH
 		pBeam->SetColor(255, 0, 0);
-		//m_pLightGlow = CSprite::SpriteCreate("sprites/redglow1.vmt", GetAbsOrigin(), FALSE);
+		//m_pLightGlow = CSprite::SpriteCreate("sprites/redglow1.vmt", startPos, FALSE);
 		break;
 	case SKILL_MEDIUM:	//STALKER_BEAM_MED
 		pBeam->SetColor(255, 50, 0);
-		//m_pLightGlow = CSprite::SpriteCreate("sprites/orangeglow1.vmt", GetAbsOrigin(), FALSE);
+		//m_pLightGlow = CSprite::SpriteCreate("sprites/orangeglow1.vmt", startPos, FALSE);
 		break;
 	case SKILL_HARD:
 		pBeam->SetColor(255, 150, 0);
-		//m_pLightGlow = CSprite::SpriteCreate("sprites/yellowglow1.vmt", GetAbsOrigin(), FALSE);
+		//m_pLightGlow = CSprite::SpriteCreate("sprites/yellowglow1.vmt", startPos, FALSE);
 		break;
 	}
 
-	//UTIL_Remove(m_pLightGlow);
+	//m_pLightGlow->SetParent(pBeam, -1);	//Parent sprite to beam so it disappears with beam
+	//m_pLightGlow->SetRenderMode(kRenderGlow);
+	//m_pLightGlow->SetScale(0.3);
+	//m_pLightGlow->SetTransmitState(FL_EDICT_ALWAYS);
+	//m_pLightGlow->TurnOn();
+
+	m_fLightGlowTrans = 200;	//make sprite visible again
+	m_pLightGlow->SetLocalOrigin(startPos);
 }
 
 //Ported routines from npc_stalker

@@ -41,6 +41,8 @@ public:
 	float		GetFireRate( void )		{	return	StalkerWep_REFIRE;	}
 
 	void		AddViewKick( void );
+	void Think(void);
+	void OnPickedUp(CBaseCombatCharacter* pNewOwner);
 	float		GetDamageForActivity( Activity hitActivity );
 
 	virtual int WeaponMeleeAttack1Condition( float flDot, float flDist );
@@ -68,6 +70,8 @@ public:
 	float				m_bPlayingHitWall;
 	float				m_bPlayingHitFlesh;
 	CSprite*			m_pLightGlow;
+	float				m_fLightGlowTrans;
+	float				m_fLightGlowLastUpdateTime;
 
 private:
 	// Animation event handlers
