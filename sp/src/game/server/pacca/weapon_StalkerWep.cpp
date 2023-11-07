@@ -464,19 +464,19 @@ void CWeaponStalkerWep::DrawBeam(const Vector& startPos, const Vector& endPos, f
 	{
 	case SKILL_EASY:		//STALKER_BEAM_HIGH
 		pBeam->SetColor(255, 0, 0);
-		m_pLightGlow = CSprite::SpriteCreate("sprites/redglow1.vmt", GetAbsOrigin(), FALSE);
+		//m_pLightGlow = CSprite::SpriteCreate("sprites/redglow1.vmt", GetAbsOrigin(), FALSE);
 		break;
 	case SKILL_MEDIUM:	//STALKER_BEAM_MED
 		pBeam->SetColor(255, 50, 0);
-		m_pLightGlow = CSprite::SpriteCreate("sprites/orangeglow1.vmt", GetAbsOrigin(), FALSE);
+		//m_pLightGlow = CSprite::SpriteCreate("sprites/orangeglow1.vmt", GetAbsOrigin(), FALSE);
 		break;
 	case SKILL_HARD:
 		pBeam->SetColor(255, 150, 0);
-		m_pLightGlow = CSprite::SpriteCreate("sprites/yellowglow1.vmt", GetAbsOrigin(), FALSE);
+		//m_pLightGlow = CSprite::SpriteCreate("sprites/yellowglow1.vmt", GetAbsOrigin(), FALSE);
 		break;
 	}
 
-	UTIL_Remove(m_pLightGlow);
+	//UTIL_Remove(m_pLightGlow);
 }
 
 //Ported routines from npc_stalker
