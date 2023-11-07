@@ -537,7 +537,7 @@ void CWeaponStalkerWep::DrawBeam(const Vector& startPos, const Vector& endPos, f
 	pBeam->RelinkBeam();
 
 	// The beam should only exist for a very short time
-	pBeam->LiveForTime(0.05f);
+	pBeam->LiveForTime(0.04f);
 
 	pBeam->SetBrightness(255);
 	pBeam->SetNoise(0);
