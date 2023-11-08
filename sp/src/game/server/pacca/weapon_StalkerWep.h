@@ -74,6 +74,8 @@ public:
 	float				m_fLightGlowTrans;
 	float				m_fLightGlowLastUpdateTime;
 
+	int				m_iLastKnownSkillLevel;	//Stores skill level from previous frame. Not saved; used only to change laser sprite.
+
 private:
 	// Animation event handlers
 	void HandleAnimEventMeleeHit( animevent_t *pEvent, CBaseCombatCharacter *pOperator );

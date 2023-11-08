@@ -118,6 +118,8 @@ CWeaponStalkerWep::CWeaponStalkerWep( void )
 	m_bPlayingHitFlesh = false;
 	m_fLightGlowTrans = 200;
 
+	m_iLastKnownSkillLevel = g_pGameRules->GetSkillLevel();
+
 	SetThink(&CWeaponStalkerWep::Think);
 	SetNextThink(gpGlobals->curtime + 0.01);
 }
@@ -168,6 +170,27 @@ void CWeaponStalkerWep::Think(void) {
 
 		if (m_pLightGlow) {
 			m_pLightGlow->SetRenderColorA(m_fLightGlowTrans);
+
+			if (m_iLastKnownSkillLevel != g_pGameRules->GetSkillLevel()) {
+				m_iLastKnownSkillLevel = g_pGameRules->GetSkillLevel();	//Update last skill value to new value
+
+				//change sprite to appropriate colored sprite texture.
+				switch (g_pGameRules->GetSkillLevel())
+				{
+				case SKILL_EASY:		//STALKER_BEAM_HIGH
+					m_pLightGlow->SetModel("sprites/redglow1.vmt");
+					break;
+				case SKILL_MEDIUM:	//STALKER_BEAM_MED
+					m_pLightGlow->SetModel("sprites/orangeglow1.vmt");
+					break;
+				case SKILL_HARD:
+					m_pLightGlow->SetModel("sprites/yellowglow1.vmt");
+					break;
+				default:
+					m_pLightGlow->SetModel("sprites/redglow1.vmt");
+					break;
+				}
+			}
 		}
 
 		//If not firing, make sure sounds aren't playing anymore.
@@ -183,6 +206,8 @@ void CWeaponStalkerWep::Think(void) {
 				m_bPlayingHitFlesh = false;
 			}
 		}
+
+		
 	}
 
 	SetThink(&CWeaponStalkerWep::Think);
@@ -230,6 +255,8 @@ void CWeaponStalkerWep::OnPickedUp(CBaseCombatCharacter* pNewOwner) {
 		m_pLightGlow = CSprite::SpriteCreate("sprites/redglow1.vmt", spritePos, FALSE);
 		break;
 	}
+
+	m_iLastKnownSkillLevel = g_pGameRules->GetSkillLevel();
 
 	m_pLightGlow->SetRenderMode(kRenderGlow);
 	m_pLightGlow->SetScale(0.6);
