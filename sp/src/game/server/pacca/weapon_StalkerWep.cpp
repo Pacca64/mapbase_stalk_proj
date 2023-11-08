@@ -116,7 +116,7 @@ CWeaponStalkerWep::CWeaponStalkerWep( void )
 	m_nBulletType = -1;
 	m_bPlayingHitWall = false;
 	m_bPlayingHitFlesh = false;
-	m_fLightGlowTrans = 200;
+	m_fLightGlowTrans = 0;
 
 	m_iLastKnownSkillLevel = g_pGameRules->GetSkillLevel();
 
@@ -262,6 +262,7 @@ void CWeaponStalkerWep::OnPickedUp(CBaseCombatCharacter* pNewOwner) {
 	m_pLightGlow->SetScale(0.6);
 	m_pLightGlow->SetParent(pPlayer);	//not a perfect solution, but makes eye tracking far more reliable when moving left or right.
 
+	m_pLightGlow->SetRenderColorA(0);	//start light glow transparent so it doesn't immediately render for player
 	//m_pLightGlow->SetParent(pPlayer->GetViewModel(), -1);	//Parent sprite to viewmodel
 	//m_pLightGlow->TurnOn();
 }
