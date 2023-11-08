@@ -749,3 +749,24 @@ void CWeaponStalkerWep::DrawAttackBeam(void)
 	TE_DynamicLight( filter, 0.0, EyePosition(), 255, 0, 0, 5, 0.2, 0 );
 	*/
 }
+
+//------------------------------------------------------------------------------
+// Purpose: Fixes stalker beam cleanup not working correctly
+//------------------------------------------------------------------------------
+void CWeaponStalkerWep::UpdateOnRemove(void)
+{
+	if (m_pLightGlow)
+	{
+		StopSound(this->entindex(), "NPC_Stalker.BurnWall");
+		StopSound(this->entindex(), "NPC_Stalker.BurnFlesh");
+
+		UTIL_Remove(m_pLightGlow);
+		m_pLightGlow = NULL;
+		m_bPlayingHitWall = false;
+		m_bPlayingHitFlesh = false;
+
+		SetThink(NULL);
+	}
+
+	BaseClass::UpdateOnRemove();
+}
