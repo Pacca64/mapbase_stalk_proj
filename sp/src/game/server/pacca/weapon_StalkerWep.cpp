@@ -63,8 +63,8 @@ IMPLEMENT_SERVERCLASS_ST(CWeaponStalkerWep, DT_WeaponStalkerWep)
 END_SEND_TABLE()
 
 #ifndef HL2MP
-LINK_ENTITY_TO_CLASS( weapon_StalkerWep, CWeaponStalkerWep );
-PRECACHE_WEAPON_REGISTER( weapon_StalkerWep );
+LINK_ENTITY_TO_CLASS( weapon_stalkerwep, CWeaponStalkerWep );
+PRECACHE_WEAPON_REGISTER( weapon_stalkerwep );
 #endif
 
 acttable_t CWeaponStalkerWep::m_acttable[] = 
