@@ -92,6 +92,10 @@ ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
 ConVar hl2_normspeed( "hl2_normspeed", "190" );
 ConVar hl2_sprintspeed( "hl2_sprintspeed", "320" );
 
+ConVar stalker_walkspeed("stalker_walkspeed", "75");
+ConVar stalker_normspeed("stalker_normspeed", "150");
+ConVar stalker_sprintspeed("stalker_sprintspeed", "280");
+
 ConVar hl2_darkness_flashlight_factor ( "hl2_darkness_flashlight_factor", "1" );
 
 #ifdef HL2MP
@@ -102,6 +106,10 @@ ConVar hl2_darkness_flashlight_factor ( "hl2_darkness_flashlight_factor", "1" );
 	#define	HL2_WALK_SPEED hl2_walkspeed.GetFloat()
 	#define	HL2_NORM_SPEED hl2_normspeed.GetFloat()
 	#define	HL2_SPRINT_SPEED hl2_sprintspeed.GetFloat()
+
+	#define	STALKER_WALK_SPEED stalker_walkspeed.GetFloat()
+	#define	STALKER_NORM_SPEED stalker_normspeed.GetFloat()
+	#define	STALKER_SPRINT_SPEED stalker_sprintspeed.GetFloat()
 #endif
 
 ConVar player_showpredictedposition( "player_showpredictedposition", "0" );
@@ -271,6 +279,7 @@ public:
 #endif
 
 	void Activate ( void );
+	void InputSetPlayerStalker(inputdata_t& inputdata);
 
 #ifdef MAPBASE
 	bool KeyValue( const char *szKeyName, const char *szValue );
@@ -520,6 +529,7 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_FIELD( m_flTimeAllSuitDevicesOff, FIELD_TIME ),
 	DEFINE_FIELD( m_fIsSprinting, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bIsStalker, FIELD_BOOLEAN),
 
 	/*
 	// These are initialized every time the player calls Activate()
@@ -1616,7 +1626,12 @@ void CHL2_Player::StartSprinting( void )
 	filter.UsePredictionRules();
 	EmitSound( filter, entindex(), "HL2Player.SprintStart" );
 
-	SetMaxSpeed( HL2_SPRINT_SPEED );
+	if (!m_bIsStalker) {
+		SetMaxSpeed(HL2_SPRINT_SPEED);
+	}
+	else {
+		SetMaxSpeed(STALKER_SPRINT_SPEED);
+	}
 	m_fIsSprinting = true;
 }
 
@@ -1632,11 +1647,21 @@ void CHL2_Player::StopSprinting( void )
 
 	if( IsSuitEquipped() )
 	{
-		SetMaxSpeed( HL2_NORM_SPEED );
+		if (!m_bIsStalker) {
+			SetMaxSpeed(HL2_NORM_SPEED);
+		}
+		else {
+			SetMaxSpeed(STALKER_NORM_SPEED);
+		}
 	}
 	else
 	{
-		SetMaxSpeed( HL2_WALK_SPEED );
+		if (!m_bIsStalker) {
+			SetMaxSpeed(HL2_WALK_SPEED);
+		}
+		else {
+			SetMaxSpeed(STALKER_WALK_SPEED);
+		}
 	}
 
 	m_fIsSprinting = false;
@@ -1668,7 +1693,13 @@ void CHL2_Player::EnableSprint( bool bEnable )
 //-----------------------------------------------------------------------------
 void CHL2_Player::StartWalking( void )
 {
-	SetMaxSpeed( HL2_WALK_SPEED );
+	if (!m_bIsStalker) {
+		SetMaxSpeed(HL2_WALK_SPEED);
+	}
+	else {
+		SetMaxSpeed(STALKER_WALK_SPEED);
+	}
+	
 	m_fIsWalking = true;
 }
 
@@ -1676,7 +1707,12 @@ void CHL2_Player::StartWalking( void )
 //-----------------------------------------------------------------------------
 void CHL2_Player::StopWalking( void )
 {
-	SetMaxSpeed( HL2_NORM_SPEED );
+	if (!m_bIsStalker) {
+		SetMaxSpeed(HL2_NORM_SPEED);
+	}
+	else {
+		SetMaxSpeed(STALKER_NORM_SPEED);
+	}
 	m_fIsWalking = false;
 }
 
@@ -4584,6 +4620,7 @@ BEGIN_DATADESC( CLogicPlayerProxy )
 	DEFINE_INPUT( m_MaxArmor, FIELD_INTEGER, "SetMaxInputArmor" ),
 	DEFINE_INPUT( m_SuitZoomFOV, FIELD_INTEGER, "SetSuitZoomFOV" ),
 #endif
+	DEFINE_INPUTFUNC(FIELD_BOOLEAN, "SetPlayerStalker", InputSetPlayerStalker),
 	DEFINE_FIELD( m_hPlayer, FIELD_EHANDLE ),
 END_DATADESC()
 
@@ -4595,6 +4632,22 @@ void CLogicPlayerProxy::Activate( void )
 	{
 		m_hPlayer = AI_GetSinglePlayer();
 	}
+}
+
+void CLogicPlayerProxy::InputSetPlayerStalker(inputdata_t& inputdata)
+{
+	if (m_hPlayer == NULL)
+		return;
+
+	CBasePlayer* pPlayer = static_cast<CBasePlayer*>(m_hPlayer.Get());
+	CHL2_Player* pHL2Player = dynamic_cast<CHL2_Player*>(pPlayer);
+
+	if (pHL2Player == NULL)
+		return;
+
+	pHL2Player->m_bIsStalker = inputdata.value.Bool();	//turn player into stalker or vice versa
+
+	pHL2Player->StopSprinting();	//Stop sprinting, but more importantly, reinit speed values based on new stalker setting.
 }
 
 #ifdef MAPBASE

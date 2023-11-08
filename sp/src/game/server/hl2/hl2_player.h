@@ -363,6 +363,8 @@ public:
 	CSoundPatch *m_sndLeeches;
 	CSoundPatch *m_sndWaterSplashes;
 
+	bool				m_bIsStalker;		// True when player is a stalker.
+
 protected:
 	virtual void		PreThink( void );
 	virtual	void		PostThink( void );
