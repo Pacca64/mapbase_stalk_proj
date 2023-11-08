@@ -41,6 +41,7 @@ public:
 	float		GetFireRate( void )		{	return	StalkerWep_REFIRE;	}
 
 	void		AddViewKick( void );
+	void Precache(void);
 	void Think(void);
 	void OnPickedUp(CBaseCombatCharacter* pNewOwner);
 	float		GetDamageForActivity( Activity hitActivity );

@@ -123,6 +123,35 @@ CWeaponStalkerWep::CWeaponStalkerWep( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: 
+//
+//
+//-----------------------------------------------------------------------------
+void CWeaponStalkerWep::Precache(void)
+{
+	PrecacheModel(DefaultOrCustomModel("models/stalker.mdl"));
+	PrecacheModel("sprites/laser.vmt");
+
+	PrecacheModel("sprites/redglow1.vmt");
+	PrecacheModel("sprites/orangeglow1.vmt");
+	PrecacheModel("sprites/yellowglow1.vmt");
+
+	PrecacheScriptSound("NPC_Stalker.BurnFlesh");
+	PrecacheScriptSound("NPC_Stalker.BurnWall");
+	PrecacheScriptSound("NPC_Stalker.FootstepLeft");
+	PrecacheScriptSound("NPC_Stalker.FootstepRight");
+	PrecacheScriptSound("NPC_Stalker.Hit");
+	PrecacheScriptSound("NPC_Stalker.Ambient01");
+	PrecacheScriptSound("NPC_Stalker.Scream");
+	PrecacheScriptSound("NPC_Stalker.Pain");
+	PrecacheScriptSound("NPC_Stalker.Die");
+
+	PrecacheParticleSystem("blood_impact_synth_01");
+
+	BaseClass::Precache();
+}
+
+//-----------------------------------------------------------------------------
 // Makes sprite fade away over time.
 //-----------------------------------------------------------------------------
 void CWeaponStalkerWep::Think(void) {
@@ -139,6 +168,20 @@ void CWeaponStalkerWep::Think(void) {
 
 		if (m_pLightGlow) {
 			m_pLightGlow->SetRenderColorA(m_fLightGlowTrans);
+		}
+
+		//If not firing, make sure sounds aren't playing anymore.
+		if (m_fLightGlowTrans <= 180) {
+			if (m_bPlayingHitWall)
+			{
+				StopSound(this->entindex(), "NPC_Stalker.BurnWall");
+				m_bPlayingHitWall = false;
+			}
+			if (m_bPlayingHitFlesh)
+			{
+				StopSound(this->entindex(), "NPC_Stalker.BurnFlesh");
+				m_bPlayingHitFlesh = false;
+			}
 		}
 	}
 
@@ -623,12 +666,12 @@ void CWeaponStalkerWep::DrawAttackBeam(void)
 				CPASAttenuationFilter filter(tr.endpos, "NPC_Stalker.BurnFlesh");
 				filter.MakeReliable();
 
-				EmitSound(filter, -1, "NPC_Stalker.BurnFlesh", &tr.endpos);
+				EmitSound(filter, this->entindex(), "NPC_Stalker.BurnFlesh", &tr.endpos);
 				m_bPlayingHitFlesh = true;
 			}
 			if (m_bPlayingHitWall)
 			{
-				StopSound(-1, "NPC_Stalker.BurnWall");
+				StopSound(this->entindex(), "NPC_Stalker.BurnWall");
 				m_bPlayingHitWall = false;
 			}
 
@@ -649,12 +692,12 @@ void CWeaponStalkerWep::DrawAttackBeam(void)
 			CPASAttenuationFilter filter(tr.endpos, "NPC_Stalker.BurnWall");
 			filter.MakeReliable();
 
-			EmitSound(filter, -1, "NPC_Stalker.BurnWall", &tr.endpos);
+			EmitSound(filter, this->entindex(), "NPC_Stalker.BurnWall", &tr.endpos);
 			m_bPlayingHitWall = true;
 		}
 		if (m_bPlayingHitFlesh)
 		{
-			StopSound(-1, "NPC_Stalker.BurnFlesh");
+			StopSound(this->entindex(), "NPC_Stalker.BurnFlesh");
 			m_bPlayingHitFlesh = false;
 		}
 
