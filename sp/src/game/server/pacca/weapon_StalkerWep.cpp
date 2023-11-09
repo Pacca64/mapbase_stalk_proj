@@ -494,8 +494,10 @@ void CWeaponStalkerWep::SecondaryAttack()
 	SendWeaponAnim(nHitActivity);
 
 	//Setup our next attack times
-	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
-	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
+	//m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+	//m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
+	//Above old code seems hardcoded to primary only melee? Somethings up there.
+	m_flNextSecondaryAttack = gpGlobals->curtime + GetFireRate();
 
 #ifndef MAPBASE
 	//Play swing sound
@@ -770,4 +772,41 @@ void CWeaponStalkerWep::UpdateOnRemove(void)
 	}
 
 	BaseClass::UpdateOnRemove();
+}
+
+//------------------------------------------------------------------------------
+// Purpose : Overridden to allow primary and secondary fire at the same time!
+//------------------------------------------------------------------------------
+void CWeaponStalkerWep::ItemPostFrame(void)
+{
+	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
+
+	if (pOwner == NULL)
+		return;
+
+#ifdef MAPBASE
+	if (pOwner->HasSpawnFlags(SF_PLAYER_SUPPRESS_FIRING))
+	{
+		WeaponIdle();
+		return;
+	}
+#endif
+
+	if ((pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
+	{
+		PrimaryAttack();
+	}
+	
+	//split from if/else to allow simultaneous fire.
+	if ((pOwner->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime))
+	{
+		SecondaryAttack();
+	}
+	
+	//maybe simplify this trash, in the unlikely event we want more attacks or something
+	if (!(pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime) && !(pOwner->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime))
+	{
+		WeaponIdle();
+		return;
+	}
 }

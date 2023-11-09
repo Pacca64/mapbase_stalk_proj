@@ -65,6 +65,8 @@ public:
 
 	void UpdateOnRemove(void);
 
+	void ItemPostFrame(void);
+
 	int	m_nBulletType;	//probably will go unused
 
 	//Taken from stalker code
