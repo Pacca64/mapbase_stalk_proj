@@ -19,6 +19,8 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectGravityGun )
 CLIENTEFFECT_MATERIAL( "sprites/physbeam" )
 CLIENTEFFECT_REGISTER_END()
 
+
+
 class C_BeamQuadratic : public CDefaultClientRenderable
 {
 public:
@@ -47,8 +49,10 @@ public:
 	int						m_active;
 	int						m_glueTouching;
 	int						m_viewModelIndex;
-};
 
+
+	virtual const matrix3x4_t& RenderableToWorldTransform();	//added in by pacca, we need to override this in the modern engine.
+};
 
 class C_WeaponGravityGun : public C_BaseCombatWeapon
 {
@@ -147,7 +151,7 @@ int	C_BeamQuadratic::DrawModel( int )
 	//points[1].z += 4*sin( gpGlobals->curtime*11 ) + 5*cos( gpGlobals->curtime*13 );
 	points[2] = m_worldPosition;
 
-	IMaterial *pMat = materials->FindMaterial( "sprites/physbeam", TEXTURE_GROUP_CLIENT_EFFECTS );
+	//IMaterial *pMat = materials->FindMaterial( "sprites/physbeam", TEXTURE_GROUP_CLIENT_EFFECTS );	//Needs to be reimplemented later:Pacca
 	Vector color;
 	if ( m_glueTouching )
 	{
@@ -159,8 +163,16 @@ int	C_BeamQuadratic::DrawModel( int )
 	}
 
 	float scrollOffset = gpGlobals->curtime - (int)gpGlobals->curtime;
-	materials->Bind( pMat );
+	//materials->Bind( pMat );	//There is definitely a way to do what this wants. Look into bind proxy stuff.:Pacca
 	DrawBeamQuadratic( points[0], points[1], points[2], 13, color, scrollOffset );
 	return 1;
 }
 
+//added in by pacca, we need to override this in the modern engine.
+const matrix3x4_t& C_BeamQuadratic::RenderableToWorldTransform()
+{
+	// Setup our transform.
+	static matrix3x4_t mat;
+	AngleMatrix(GetRenderAngles(), GetRenderOrigin(), mat);
+	return mat;
+}

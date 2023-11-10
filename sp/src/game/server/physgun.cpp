@@ -1422,6 +1422,8 @@ bool CWeaponGravityGun::Reload( void )
 	return false;
 }
 
+//Removed by pacca; a duplicate console command that's probably better maintained elsewhere in the engine.
+/*
 #define NUM_COLLISION_TESTS 2500
 void CC_CollisionTest( const CCommand &args )
 {
@@ -1521,3 +1523,4 @@ void CC_CollisionTest( const CCommand &args )
 #endif
 }
 static ConCommand collision_test("collision_test", CC_CollisionTest, "Tests collision system", FCVAR_CHEAT );
+*/
