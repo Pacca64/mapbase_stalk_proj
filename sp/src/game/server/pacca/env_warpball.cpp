@@ -306,9 +306,18 @@ void CEnvWarpBall::SpawnEffectEntities() {
 	//DevMsg(textureStringSetter.c_str());
 	SetEntKeyvalue(m_pBeam, textureStringSetter.c_str(), 6);
 	SetEntKeyvalue(m_pBeam, "StrikeTime -.5", 7);
-	variant_t vMyName;
-	vMyName.SetString(MAKE_STRING(GetDebugName()));	//get our targetname (must actually have one for this to work right!)
-	m_pBeam->AcceptInput("SetStartEntity", this, this, vMyName, 8);	//set start entity to me! In a horrible roundabout fashion X3
+
+	//Make env_beam set itself as it's start entity.
+	//We don't have direct access to it, so we need to assemble more I/O and strings
+	std::string beamTargetnameStr = std::string(GetDebugName());	//get our name
+	std::string beamTargetnameSetter = (beamTargetnameStr + "_env_beam_" + std::to_string(random->RandomInt(0, 2147483647)));//append env_beam and a random int to give it a unique targetname.
+	const char* beamNewName = beamTargetnameSetter.c_str();	//get new beam name as a c string
+	string_t beamNewName_t = AllocPooledString(beamNewName);	//this seems to be valves fix for references getting overwritten.
+	m_pBeam->SetName(beamNewName_t);	//set beam targetname
+	variant_t vBeamName;
+	vBeamName.SetString(beamNewName_t);	//get beam targetname as a variant_t
+	m_pBeam->AcceptInput("SetStartEntity", this, this, vBeamName, 8);	//set start entity to the beam itself.
+
 	variant_t vBeamSpawnFlags;
 	vBeamSpawnFlags.SetInt(6);	//Toggle (2) + Random Strike (4)
 	m_pBeam->AcceptInput("AddSpawnFlags", this, this, vBeamSpawnFlags, 9);	//set spawn flags
