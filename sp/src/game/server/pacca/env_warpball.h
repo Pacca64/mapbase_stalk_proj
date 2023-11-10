@@ -60,6 +60,16 @@ public:
 	color32 m_cSpriteGreenColor;
 	color32 m_cBeamColor;
 
+	int m_iRenderFX;
+	int m_iRenderMode;
+	//int m_iRenderAmt;	//this seems to not exist in engine?
+	float m_fSpriteScale;
+	int m_iViewHideFlags;
+	float m_fGlowProxySize;
+	//float m_fHDRColorScale;	//can't be set on the fly. Inits to 1.0 (default sane value) anyways.
+	float m_fFramerate;
+	float m_fZapRadius;
+
 private:
 
 	bool m_bDisabled;

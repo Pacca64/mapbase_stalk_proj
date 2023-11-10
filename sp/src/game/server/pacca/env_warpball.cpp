@@ -33,13 +33,27 @@ BEGIN_DATADESC(CEnvWarpBall)
 DEFINE_FIELD(m_bWaitForRefire, FIELD_BOOLEAN),
 DEFINE_KEYFIELD(m_bDisabled, FIELD_BOOLEAN, "StartDisabled"),
 
+//keyvalues to pass through to sprites
+DEFINE_KEYFIELD(m_iRenderFX, FIELD_INTEGER, "renderfx"),
+DEFINE_KEYFIELD(m_iRenderMode, FIELD_INTEGER, "rendermode"),
+//DEFINE_KEYFIELD(m_iRenderAmt, FIELD_INTEGER, "renderamt"),	//this seems to not exist in engine?
+DEFINE_KEYFIELD(m_fSpriteScale, FIELD_FLOAT, "scale"),
+DEFINE_KEYFIELD(m_iViewHideFlags, FIELD_INTEGER, "viewhideflags"),
+DEFINE_KEYFIELD(m_fGlowProxySize, FIELD_FLOAT, "GlowProxySize"),
+//DEFINE_KEYFIELD(m_fHDRColorScale, FIELD_FLOAT, "HDRColorScale"),	//A client side thing that can't be set on the fly. Probably not important anyways.
+DEFINE_KEYFIELD(m_fFramerate, FIELD_FLOAT, "framerate"),
+DEFINE_KEYFIELD(m_fZapRadius, FIELD_FLOAT, "Radius"),	//radius of env_beam zaps.
+
+//Sprite textures
 DEFINE_KEYFIELD(m_iszSpriteExplodeName, FIELD_STRING, "ExplodeSpriteName"),
 DEFINE_KEYFIELD(m_iszSpriteGreenName, FIELD_STRING, "FadeSpriteName"),
 DEFINE_KEYFIELD(m_iszSpriteBeamName, FIELD_STRING, "BeamSpriteName"),
 
+//Game sounds
 DEFINE_KEYFIELD(m_iszSoundAName, FIELD_SOUNDNAME, "StartSoundName"),
 DEFINE_KEYFIELD(m_iszSoundBName, FIELD_SOUNDNAME, "EndSoundName"),
 
+//Colors
 DEFINE_KEYFIELD(m_cSpriteExplodeColor, FIELD_COLOR32, "ExplodeSpriteColor"),
 DEFINE_KEYFIELD(m_cSpriteGreenColor, FIELD_COLOR32, "FadeSpriteColor"),
 DEFINE_KEYFIELD(m_cBeamColor, FIELD_COLOR32, "BeamColor"),
@@ -248,18 +262,27 @@ void CEnvWarpBall::SpawnEffectEntities() {
 
 	//env_sprites
 	m_pGlowExplode = CSprite::SpriteCreate(STRING(m_iszSpriteExplodeName), spritePos, FALSE);
-	m_pGlowExplode->m_nRenderFX = kRenderFxNoDissipation;	//Constant Glow (14)
-	m_pGlowExplode->m_nRenderMode = kRenderGlow;	//Glow (3)
-	m_pGlowExplode->SetScale(1);
+	m_pGlowExplode->m_nRenderFX = m_iRenderFX;	//Constant Glow (14)
+	m_pGlowExplode->m_nRenderMode = m_iRenderMode;	//Glow (3)
 	m_pGlowExplode->AddSpawnFlags(2);	//Play Once (2)
-	m_pGlowExplode->m_flSpriteFramerate = 10.0f;
+	m_pGlowExplode->m_flSpriteFramerate = m_fFramerate;
+	m_pGlowExplode->SetScale(m_fSpriteScale);
+	m_pGlowExplode->m_iViewHideFlags = m_iViewHideFlags;
+	m_pGlowExplode->SetGlowProxySize(m_fGlowProxySize);
+
+	/*
+	m_iRenderAmt;
+	m_fHDRColorScale;
+	*/
 
 	m_pGlowGreen = CSprite::SpriteCreate(STRING(m_iszSpriteGreenName), spritePos, FALSE);
-	m_pGlowGreen->m_nRenderFX = kRenderFxNoDissipation;	//Constant Glow (14)
-	m_pGlowGreen->m_nRenderMode = kRenderGlow;	//Glow (3)
-	m_pGlowGreen->SetScale(1);
+	m_pGlowGreen->m_nRenderFX = m_iRenderFX;	//Constant Glow (14)
+	m_pGlowGreen->m_nRenderMode = m_iRenderMode;	//Glow (3)
 	//m_pGlowGreen->AddSpawnFlags(2);	//Play Once (2)
-	m_pGlowGreen->m_flSpriteFramerate = 10.0f;
+	m_pGlowGreen->m_flSpriteFramerate = m_fFramerate;
+	m_pGlowGreen->SetScale(m_fSpriteScale);
+	m_pGlowGreen->m_iViewHideFlags = m_iViewHideFlags;
+	m_pGlowGreen->SetGlowProxySize(m_fGlowProxySize);
 
 
 	//env_beam for zap effects. I'd rather hack env_beam to work without a .h file then copy it's code to make cbeam take its place.
@@ -269,13 +292,18 @@ void CEnvWarpBall::SpawnEffectEntities() {
 	variant_t vColor;
 	vColor.SetColor32(m_cBeamColor);
 	m_pBeam->AcceptInput("Color", this, this, vColor, 1);	//set beam color
-	SetEntKeyvalue(m_pBeam, "Radius 100", 2);
+
+	//SetEntKeyvalue(m_pBeam, "Radius 100", 2);	//We're gonna want radius to scale with scale at some point.
+	std::string radiusStr = std::to_string(m_fZapRadius);	//get zap radius value as string
+	std::string radiusStringSetter = (std::string("Radius ") + radiusStr);	//make addoutput string for radius
+	SetEntKeyvalue(m_pBeam, radiusStringSetter.c_str(), 2);
+
 	SetEntKeyvalue(m_pBeam, "Life 0.5", 3);
 	SetEntKeyvalue(m_pBeam, "BoltWidth 1.8", 4);
 	SetEntKeyvalue(m_pBeam, "NoiseAmplitude 35", 5);
 	std::string beamNameStr = std::string(STRING(m_iszSpriteBeamName));
 	std::string textureStringSetter = (std::string("texture ") + beamNameStr);	//This better fucking work.
-	DevMsg(textureStringSetter.c_str());
+	//DevMsg(textureStringSetter.c_str());
 	SetEntKeyvalue(m_pBeam, textureStringSetter.c_str(), 6);
 	SetEntKeyvalue(m_pBeam, "StrikeTime -.5", 7);
 	variant_t vMyName;
