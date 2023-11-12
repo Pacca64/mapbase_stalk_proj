@@ -66,6 +66,10 @@ DEFINE_FIELD(m_fTimeSinceEffectStarted, FIELD_FLOAT),
 DEFINE_FIELD(m_bSecondSoundPlayed, FIELD_BOOLEAN),
 DEFINE_FIELD(m_fAlphaSpriteGreen, FIELD_FLOAT),
 
+DEFINE_KEYFIELD(m_fTimeToPlaySFX2, FIELD_FLOAT, "TimeToPlaySFX2"),	//if not set by keyvalue, this should be 0.5.
+DEFINE_KEYFIELD(m_fTimeToStartFade, FIELD_FLOAT, "TimeToStartFade"),	//if not set by keyvalue, this should be 1.
+DEFINE_KEYFIELD(m_fAlphaSpriteGreenFadePerTick, FIELD_FLOAT, "FadeSpriteFadePerTick"),	//if not set by keyvalue, this should be 2.55
+
 // Inputs
 DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
 DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
@@ -84,6 +88,11 @@ END_DATADESC()
 //-----------------------------------------------------------------------------
 CEnvWarpBall::CEnvWarpBall(void)
 {
+}
+
+void CEnvWarpBall::Spawn(void) {
+	Precache();
+	BaseClass::Spawn();
 }
 
 //-----------------------------------------------------------------------------
@@ -128,6 +137,31 @@ void CEnvWarpBall::Activate()
 		Warning("!\n");
 		this->SetName(AllocPooledString(newName));
 	}
+
+
+	if (m_fTimeToPlaySFX2 <= 0) {
+		Warning("CEnvWarpBall TimeToPlaySFX2 has invalid value ");
+		Warning(std::to_string(m_fTimeToPlaySFX2).c_str());
+		Warning("!\n");
+		//if not set by keyvalue, this should be 0.5.
+		m_fTimeToPlaySFX2 = 0.5;
+	}
+
+	if (m_fTimeToStartFade <= 0) {
+		Warning("CEnvWarpBall m_fTimeToStartFade has invalid value ");
+		Warning(std::to_string(m_fTimeToPlaySFX2).c_str());
+		Warning("!\n");
+		//if not set by keyvalue, this should be 1.
+		m_fTimeToStartFade = 1;
+	}
+
+	if (m_fAlphaSpriteGreenFadePerTick <= 0) {
+		Warning("CEnvWarpBall m_fAlphaSpriteGreenFadePerTick has invalid value ");
+		Warning(std::to_string(m_fAlphaSpriteGreenFadePerTick).c_str());
+		Warning("!\n");
+		//if not set by keyvalue, this should be 2.55.
+		m_fAlphaSpriteGreenFadePerTick = 2.55;
+	}
 }
 
 
@@ -136,18 +170,18 @@ void CEnvWarpBall::Activate()
 //-----------------------------------------------------------------------------
 void CEnvWarpBall::Think()
 {
-	if (gpGlobals->curtime > 0.5 + m_fTimeSinceEffectStarted && !m_bSecondSoundPlayed) {
+	if (gpGlobals->curtime > m_fTimeToPlaySFX2 + m_fTimeSinceEffectStarted && !m_bSecondSoundPlayed) {
 		//if 0.5s have passed since start and second sound hasn't played yet...
 		m_bSecondSoundPlayed = true;	//ensure this only runs once
 
-		CPASAttenuationFilter filter(this->GetAbsOrigin(), STRING(m_iszSoundAName));
+		CPASAttenuationFilter filter(this->GetAbsOrigin(), STRING(m_iszSoundBName));
 		filter.MakeReliable();
 		EmitSound(filter, this->entindex(), STRING(m_iszSoundBName), &this->GetAbsOrigin());	//Play second sound
-	} else if (gpGlobals->curtime > 1 + m_fTimeSinceEffectStarted) {
+	} else if (gpGlobals->curtime > m_fTimeToStartFade + m_fTimeSinceEffectStarted) {
 		//if 1s or more have passed since start... (runs every think frame after that point!)
 
 		//Reduce alpha of green sprite to make it visibly fade away.
-		m_fAlphaSpriteGreen -= 2.55;
+		m_fAlphaSpriteGreen -= m_fAlphaSpriteGreenFadePerTick;
 
 		//update sprite with alpha value
 		m_pGlowGreen->SetRenderColorA(clamp(m_fAlphaSpriteGreen, 0, 255));

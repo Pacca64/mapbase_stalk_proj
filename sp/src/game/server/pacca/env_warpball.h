@@ -23,6 +23,8 @@ public:
 
 	CEnvWarpBall();
 
+	void Spawn(void);
+
 	void Precache(void);
 
 	void Activate();
@@ -69,6 +71,9 @@ public:
 	//float m_fHDRColorScale;	//can't be set on the fly. Inits to 1.0 (default sane value) anyways.
 	float m_fFramerate;
 	float m_fZapRadius;
+	float m_fTimeToPlaySFX2;	//if not set by keyvalue, this should be 0.5.
+	float m_fTimeToStartFade;	//if not set by keyvalue, this should be 1.
+	float m_fAlphaSpriteGreenFadePerTick;	//2.55
 
 private:
 
