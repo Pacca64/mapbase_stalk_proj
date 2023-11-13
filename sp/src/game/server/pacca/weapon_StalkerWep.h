@@ -82,6 +82,8 @@ public:
 
 	float			m_iLastLaserFireEnded;	//should be set to curtime when player releases attack1
 	bool			m_bPrimaryFireHeldLastFrame;	//should be set to false when primary fire isn't active.
+	float			m_fTimeSincePrimaryFireStarted;	//set when player fires a laser for the first time this cooldown, used for armor drain.
+	float			m_fArmorDrainFraction;	//if this goes over 1, subtract 1 from armor and this. Allows us to pretend armor is a float.
 
 private:
 	// Animation event handlers

@@ -28,6 +28,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 #include <string>
+#include <hl2/hl2_player.h>
 
 // Stalker Constants copied over.
 #define	MIN_STALKER_FIRE_RANGE		64
@@ -54,7 +55,7 @@ ConVar    sk_plr_dmg_stalkerwep_beam_hard	("sk_plr_dmg_stalkerwep_beam_hard", "0
 
 ConVar    sk_plr_stalkerwep_cooldown("sk_plr_stalkerwep_cooldown", "0", FCVAR_NONE, "Time to wait before laser can fire again.");
 ConVar    sk_plr_stalkerwep_freetime("sk_plr_stalkerwep_freetime", "0", FCVAR_NONE, "How long player can fire laser before it starts draining armor.");
-ConVar    sk_plr_stalkerwep_armordrain("sk_plr_stalkerwep_armordrain", "0", FCVAR_NONE, "How much armor to drain when firing laser for too long each think. Measured in 1/100th of an armor point.");
+ConVar    sk_plr_stalkerwep_armordrain("sk_plr_stalkerwep_armordrain", "0", FCVAR_NONE, "How much armor to drain when firing laser for too long each think. A floating point value! Subtract every 0.01 seconds after laser is fired too long.");
 
 //Pacca defines
 #define STALKERWEP_BEAMSPRITE_DIST	15
@@ -123,6 +124,8 @@ CWeaponStalkerWep::CWeaponStalkerWep( void )
 	m_fLightGlowTrans = 0;
 
 	m_iLastKnownSkillLevel = g_pGameRules->GetSkillLevel();
+
+	m_fArmorDrainFraction = 0;
 
 	SetThink(&CWeaponStalkerWep::Think);
 	SetNextThink(gpGlobals->curtime + 0.01);
@@ -211,7 +214,40 @@ void CWeaponStalkerWep::Think(void) {
 			}
 		}
 
-		
+		//Bundled in with the light update system so it only runs every 0.01 seconds.
+		if (m_fTimeSincePrimaryFireStarted + sk_plr_stalkerwep_freetime.GetFloat() < gpGlobals->curtime && m_bPrimaryFireHeldLastFrame) {
+			//if time since we started firing laser + freetime for laser fire is LESS THEN curtime, AND we've been holding down primary fire the entire time...
+
+			if (sk_plr_stalkerwep_armordrain.GetFloat() > 1) {
+				Warning("sk_plr_stalkerwep_armordrain is greater then 1! This should NEVER happen!\n");
+				Warning("setting sk_plr_stalkerwep_armordrain to 1. You should fix this properly though!\n");
+				sk_plr_stalkerwep_armordrain.SetValue("1");
+			}
+
+			m_fArmorDrainFraction += sk_plr_stalkerwep_armordrain.GetFloat();	//add armor drain to armor drain tracker
+
+			if (m_fArmorDrainFraction > 1) {
+				CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
+				CHL2_Player* pHL2Player = dynamic_cast<CHL2_Player*>(pPlayer);
+
+				if (pHL2Player != NULL) {
+					//if owner is an HL2 player...
+					m_fArmorDrainFraction -= 1;	//remove 1 from armor drain tracker
+					float fArmorValue = pHL2Player->ArmorValue();	//get armor value
+					if (fArmorValue > 0) {
+						//if armor is greater then 0...
+						pHL2Player->SetArmorValue(fArmorValue - 1);	//drain 1 from armor
+
+						DevMsg("Removing 1 armor from player");
+						DevMsg("\n");
+					}
+				}
+			}
+
+			DevMsg("Armor fraction is now ");
+			DevMsg(std::to_string(m_fArmorDrainFraction).c_str());
+			DevMsg("\n");
+		}
 	}
 
 	SetThink(&CWeaponStalkerWep::Think);
@@ -366,7 +402,11 @@ void CWeaponStalkerWep::PrimaryAttack()
 		return;	//don't fire while waiting on cooldown.
 	}
 
-	m_bPrimaryFireHeldLastFrame = true;	//player is firing! make sure cooldown code knows that.
+	if (!m_bPrimaryFireHeldLastFrame) {
+		//if primary fire was NOT used last time; this means this is the first time we've used the attack since last cooldown!
+		m_bPrimaryFireHeldLastFrame = true;	//player is firing! make sure cooldown code knows that.
+		m_fTimeSincePrimaryFireStarted = gpGlobals->curtime;	//save time we started firing.
+	}
 
 	// Only the player fires this way so we can cast
 	CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
