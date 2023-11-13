@@ -14,6 +14,7 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+#include <hl2/hl2_player.h>
 
 #ifdef MAPBASE
 // ========================================================================
@@ -29,6 +30,16 @@ public:
 
 	int ITEM_GiveAmmo( CBasePlayer *pPlayer, float flCount, const char *pszAmmoName, bool bSuppressSound = false )
 	{
+		//Pacca: Thank goodness, mapbase centralized this crap.
+		CHL2_Player* pHL2Player = dynamic_cast<CHL2_Player*>(pPlayer);
+		if (pHL2Player != NULL) {
+			//if this is an HL2 player... (sanity check I guess lol)
+			if (pHL2Player->m_bIsStalker && !(pHL2Player->m_bHasStalkerHands)) {
+				//If player is a stalker AND player does NOT have stalker hands upgrade...
+				return false;	//do nothing and say ammo pickup failed.
+			}
+		}
+
 		int iAmmoType = GetAmmoDef()->Index(pszAmmoName);
 		if (iAmmoType == -1)
 		{
