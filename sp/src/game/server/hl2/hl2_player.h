@@ -293,6 +293,9 @@ public:
 
 	void FirePlayerProxyOutput( const char *pszOutputName, variant_t variant, CBaseEntity *pActivator, CBaseEntity *pCaller );
 
+	//pacca
+	bool PlayerHasHands();	//for when stalker has no hands
+
 	CLogicPlayerProxy	*GetPlayerProxy( void );
 
 	// Flashlight Device

@@ -4584,6 +4584,13 @@ void CHL2_Player::FirePlayerProxyOutput( const char *pszOutputName, variant_t va
 	GetPlayerProxy()->FireNamedOutput( pszOutputName, variant, pActivator, pCaller );
 }
 
+//Returns true if player has hands, false if otherwise.
+bool CHL2_Player::PlayerHasHands()
+{
+	return !m_bIsStalker || m_bHasStalkerHands;	//If player is not a stalker, OR we have the stalker hands upgrade, we have hands.
+}
+
+
 LINK_ENTITY_TO_CLASS( logic_playerproxy, CLogicPlayerProxy);
 
 BEGIN_DATADESC( CLogicPlayerProxy )

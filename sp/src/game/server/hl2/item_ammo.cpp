@@ -34,8 +34,8 @@ public:
 		CHL2_Player* pHL2Player = dynamic_cast<CHL2_Player*>(pPlayer);
 		if (pHL2Player != NULL) {
 			//if this is an HL2 player... (sanity check I guess lol)
-			if (pHL2Player->m_bIsStalker && !(pHL2Player->m_bHasStalkerHands)) {
-				//If player is a stalker AND player does NOT have stalker hands upgrade...
+			if (!pHL2Player->PlayerHasHands()) {
+				//If player does not have hands...
 				return false;	//do nothing and say ammo pickup failed.
 			}
 		}
