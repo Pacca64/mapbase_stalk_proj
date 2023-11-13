@@ -3403,6 +3403,40 @@ bool CHL2_Player::BumpWeapon( CBaseCombatWeapon *pWeapon )
 {
 	if (m_bIsStalker && !(m_bHasStalkerHands)) {
 		//If player is a stalker AND player does NOT have stalker hands upgrade...
+
+		//Copied from weapon_CanUse, allows handless stalker to charge from stunsticks whilst still respecting mapbase gamerules.
+		if (pWeapon->ClassMatches("weapon_stunstick"))
+		{
+			switch (HL2GameRules()->GetStunstickPickupBehavior())
+			{
+				// Default, including 0
+			default:
+			{
+				if (ApplyBattery(0.5))
+					UTIL_Remove(pWeapon);
+				return false;
+			} break;
+
+			// Allow pickup, if already picked up just apply battery
+			case 1:
+			{
+				//Since we don't have hands, we can't pick up the weapon. Always just give battery charge instead.
+				//if (Weapon_OwnsThisType("weapon_stunstick"))
+				//{
+					if (ApplyBattery(0.5))
+						UTIL_Remove(pWeapon);
+					return false;
+				//}
+			} break;
+
+			// Don't pickup, don't even apply battery
+			case 2: return false;
+
+				// Just pickup, never apply battery
+			case 3: return false;	//again, no hands, we can't pickup weapons here.
+			}
+		}
+
 		return false;	//do nothing and say weapon pickup failed.
 	}
 
