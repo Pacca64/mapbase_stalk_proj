@@ -46,7 +46,8 @@ bool CTriggerSuitChargerAOE::IsPlayerFull(CBasePlayer* player, CBaseEntity* char
 	int nMaxArmor = 100;
 	if (charger->HasSpawnFlags(SF_CITADEL_RECHARGER))
 	{
-		nMaxArmor = sk_suitcharger_citadel_maxarmor.GetInt();
+		ConVar* sk_suitcharger_citadel_maxarmor = cvar->FindVar("sk_suitcharger_citadel_maxarmor");
+		nMaxArmor = sk_suitcharger_citadel_maxarmor->GetInt();
 	}
 
 	return player->ArmorValue() >= nMaxArmor;	//if player armor is GREATER THEN OR EQUAL TO max armor for this charger, player is full
