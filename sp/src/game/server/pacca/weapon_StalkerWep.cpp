@@ -238,15 +238,15 @@ void CWeaponStalkerWep::Think(void) {
 						//if armor is greater then 0...
 						pHL2Player->SetArmorValue(fArmorValue - 1);	//drain 1 from armor
 
-						DevMsg("Removing 1 armor from player");
-						DevMsg("\n");
+						//DevMsg("Removing 1 armor from player");
+						//DevMsg("\n");
 					}
 				}
 			}
 
-			DevMsg("Armor fraction is now ");
-			DevMsg(std::to_string(m_fArmorDrainFraction).c_str());
-			DevMsg("\n");
+			//DevMsg("Armor fraction is now ");
+			//DevMsg(std::to_string(m_fArmorDrainFraction).c_str());
+			//DevMsg("\n");
 		}
 	}
 
