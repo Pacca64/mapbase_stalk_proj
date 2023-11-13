@@ -364,6 +364,7 @@ public:
 	CSoundPatch *m_sndWaterSplashes;
 
 	bool				m_bIsStalker;		// True when player is a stalker.
+	bool				m_bHasStalkerHands;	// True when player gets stalker hands upgrade
 
 protected:
 	virtual void		PreThink( void );

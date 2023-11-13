@@ -279,7 +279,10 @@ public:
 #endif
 
 	void Activate ( void );
+
 	void InputSetPlayerStalker(inputdata_t& inputdata);
+	void InputGivePlayerStalkerHands(inputdata_t& inputdata);
+	void InputRemovePlayerStalkerHands(inputdata_t& inputdata);
 
 #ifdef MAPBASE
 	bool KeyValue( const char *szKeyName, const char *szValue );
@@ -530,6 +533,7 @@ BEGIN_DATADESC( CHL2_Player )
 	DEFINE_FIELD( m_fIsSprinting, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bIsStalker, FIELD_BOOLEAN),
+	DEFINE_FIELD(m_bHasStalkerHands, FIELD_BOOLEAN),
 
 	/*
 	// These are initialized every time the player calls Activate()
@@ -3397,6 +3401,10 @@ void CHL2_Player::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 //-----------------------------------------------------------------------------
 bool CHL2_Player::BumpWeapon( CBaseCombatWeapon *pWeapon )
 {
+	if (m_bIsStalker && !(m_bHasStalkerHands)) {
+		//If player is a stalker AND player does NOT have stalker hands upgrade...
+		return false;	//do nothing and say weapon pickup failed.
+	}
 
 #if	HL2_SINGLE_PRIMARY_WEAPON_MODE
 
@@ -4621,6 +4629,8 @@ BEGIN_DATADESC( CLogicPlayerProxy )
 	DEFINE_INPUT( m_SuitZoomFOV, FIELD_INTEGER, "SetSuitZoomFOV" ),
 #endif
 	DEFINE_INPUTFUNC(FIELD_BOOLEAN, "SetPlayerStalker", InputSetPlayerStalker),
+	DEFINE_INPUTFUNC(FIELD_BOOLEAN, "GiveStalkerHandsUpgrade", InputGivePlayerStalkerHands),
+	DEFINE_INPUTFUNC(FIELD_BOOLEAN, "RemoveStalkerHandsUpgrade", InputRemovePlayerStalkerHands),
 	DEFINE_FIELD( m_hPlayer, FIELD_EHANDLE ),
 END_DATADESC()
 
@@ -4648,15 +4658,75 @@ void CLogicPlayerProxy::InputSetPlayerStalker(inputdata_t& inputdata)
 	pHL2Player->m_bIsStalker = inputdata.value.Bool();	//turn player into stalker or vice versa
 
 	pHL2Player->StopSprinting();	//Stop sprinting, but more importantly, reinit speed values based on new stalker setting.
+
+	if (pHL2Player->m_bIsStalker) {
+		//If player was turned into stalker...
+		if (!pHL2Player->m_bHasStalkerHands) {
+			//if we don't have hands upgrade...
+			pHL2Player->DisableButtons(IN_USE);	//Disable use key
+		}
+	}
+	else {
+		//If player was turned into non-stalker...
+		pHL2Player->EnableButtons(IN_USE);	//Reenable use key
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Pacca: Give Hands upgrade to Stalker players.
+//			Reenables use key and picking up weapons.
+// Input  : 
+// Output : 
+//-----------------------------------------------------------------------------
+void CLogicPlayerProxy::InputGivePlayerStalkerHands(inputdata_t& inputdata)
+{
+	if (m_hPlayer == NULL)
+		return;
+
+	CBasePlayer* pPlayer = static_cast<CBasePlayer*>(m_hPlayer.Get());
+	CHL2_Player* pHL2Player = dynamic_cast<CHL2_Player*>(pPlayer);
+
+	if (pHL2Player == NULL)
+		return;
+
+	pHL2Player->EnableButtons(IN_USE);	//Reenable use key
+
+	pHL2Player->m_bHasStalkerHands = true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Pacca: Give Hands upgrade to Stalker players.
+//			Reenables use key and picking up weapons.
+// Input  : 
+// Output : 
+//-----------------------------------------------------------------------------
+void CLogicPlayerProxy::InputRemovePlayerStalkerHands(inputdata_t& inputdata)
+{
+	if (m_hPlayer == NULL)
+		return;
+
+	CBasePlayer* pPlayer = static_cast<CBasePlayer*>(m_hPlayer.Get());
+	CHL2_Player* pHL2Player = dynamic_cast<CHL2_Player*>(pPlayer);
+
+	if (pHL2Player == NULL)
+		return;
+
+	if (pHL2Player->m_bIsStalker) {
+		//If player was already a stalker...
+		pHL2Player->DisableButtons(IN_USE);	//Disable use key
+	}
+	else {
+		//If player was already a non-stalker...
+		//Commented out because we don't want to override player_speedmod if we don't have too.
+		//pHL2Player->EnableButtons(IN_USE);	//Reenable use key
+	}
+
+	pHL2Player->m_bHasStalkerHands = false;
 }
 
 #ifdef MAPBASE
-//-----------------------------------------------------------------------------
-// Purpose: Cache user entity field values until spawn is called.
-// Input  : szKeyName - Key to handle.
-//			szValue - Value for key.
-// Output : Returns true if the key was handled, false if not.
-//-----------------------------------------------------------------------------
+
+
 bool CLogicPlayerProxy::KeyValue( const char *szKeyName, const char *szValue )
 {
 	bool bPlayerKV = false;
