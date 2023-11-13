@@ -18,6 +18,7 @@
 #include "player.h"
 #include "engine/IEngineSound.h"
 #include "in_buttons.h"
+#include "func_recharge.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -393,58 +394,6 @@ void CRecharge::Off(void)
 	}
 }
 
-
-//NEW
-class CNewRecharge : public CBaseAnimating
-{
-public:
-	DECLARE_CLASS( CNewRecharge, CBaseAnimating );
-
-	void Spawn( );
-	bool CreateVPhysics();
-	int DrawDebugTextOverlays(void);
-	void Off(void);
-	void Recharge(void);
-	bool KeyValue( const char *szKeyName, const char *szValue );
-	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	virtual int	ObjectCaps( void ) { return (BaseClass::ObjectCaps() | m_iCaps ); }
-
-	void SetInitialCharge( void );
-
-private:
-	void InputRecharge( inputdata_t &inputdata );
-	void InputSetCharge( inputdata_t &inputdata );
-#ifdef MAPBASE
-	void InputSetChargeNoMax( inputdata_t &inputdata );
-#endif
-	float MaxJuice() const;
-	void UpdateJuice( int newJuice );
-	void Precache( void );
-
-	DECLARE_DATADESC();
-
-	float	m_flNextCharge; 
-	int		m_iReactivate ; // DeathMatch Delay until reactvated
-	int		m_iJuice;
-	int		m_iOn;			// 0 = off, 1 = startup, 2 = going
-	float   m_flSoundTime;
-	
-	int		m_nState;
-	int		m_iCaps;
-	int		m_iMaxJuice;
-#ifdef MAPBASE
-	int		m_iIncrementValue;
-#endif
-	
-	COutputFloat m_OutRemainingCharge;
-	COutputEvent m_OnHalfEmpty;
-	COutputEvent m_OnEmpty;
-	COutputEvent m_OnFull;
-	COutputEvent m_OnPlayerUse;
-
-	virtual void StudioFrameAdvance ( void );
-	float m_flJuice;
-};
 
 BEGIN_DATADESC( CNewRecharge )
 
