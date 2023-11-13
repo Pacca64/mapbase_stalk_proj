@@ -26,6 +26,7 @@ public:
 	virtual bool IsCharger(CBaseEntity* ent) = 0;
 	virtual int GetChargerJuice(CBaseEntity* ent) = 0;
 	virtual void PlayEmptySound(CBaseEntity* ent) = 0;
+	virtual bool IsPlayerFull(CBasePlayer* player, CBaseEntity* charger) = 0;
 
 	string_t	m_sChargerName;
 	CBaseEntity* m_pCharger;

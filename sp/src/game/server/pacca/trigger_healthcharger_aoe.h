@@ -1,13 +1,13 @@
 #pragma once
 #include "cbase.h"
 #include "CTriggerChargerAOEBase.h"
-#include <hl2/func_recharge.h>
+#include "CWallHealth.h"
 #include <hl2/hl2_player.h>
 
-class CTriggerSuitChargerAOE : public CTriggerChargerAOEBase
+class CTriggerHealthChargerAOE: public CTriggerChargerAOEBase
 {
 public:
-	DECLARE_CLASS(CTriggerSuitChargerAOE, CTriggerChargerAOEBase);
+	DECLARE_CLASS(CTriggerHealthChargerAOE, CTriggerChargerAOEBase);
 	DECLARE_DATADESC();
 
 	const char* GetChargerClassname();

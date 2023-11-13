@@ -39,3 +39,15 @@ void CTriggerSuitChargerAOE::PlayEmptySound(CBaseEntity* ent)
 {
 	ent->EmitSound("SuitRecharge.Deny");
 }
+
+bool CTriggerSuitChargerAOE::IsPlayerFull(CBasePlayer* player, CBaseEntity* charger)
+{
+	// Get our maximum armor value
+	int nMaxArmor = 100;
+	if (charger->HasSpawnFlags(SF_CITADEL_RECHARGER))
+	{
+		nMaxArmor = sk_suitcharger_citadel_maxarmor.GetInt();
+	}
+
+	return player->ArmorValue() >= nMaxArmor;	//if player armor is GREATER THEN OR EQUAL TO max armor for this charger, player is full
+}

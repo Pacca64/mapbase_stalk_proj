@@ -103,25 +103,28 @@ void CTriggerChargerAOEBase::Think() {
 	CBasePlayer* pPlayer = ToBasePlayer(UTIL_GetLocalPlayer());
 	CHL2_Player* pHL2Player = dynamic_cast<CHL2_Player*>(pPlayer);
 
-	if (pHL2Player && pPlayer->IsSuitEquipped() && (m_bAllowNonStalkerUse || pHL2Player->m_bIsStalker)) {
-		//If player is hl2 player, has suit equipped, and is either a stalker or we allow non stalkers to use us...
-		if (m_bIsTouchingPlayer) {
-			//if touching a player...
-			if (m_pCharger && GetChargerJuice(m_pCharger) > 0) {
-				//if charger is valid and it's juice is greater then 0...
-				//DevMsg("Player SHOULD be charging now.\n");
-				FakeChargeEvent(pHL2Player);
-				m_bWasCharging = true;
+	if (!IsPlayerFull(pHL2Player, m_pCharger)) {
+		//if player is not full (of armor, health, etc.)
+		if (pHL2Player && pPlayer->IsSuitEquipped() && (m_bAllowNonStalkerUse || pHL2Player->m_bIsStalker)) {
+			//If player is hl2 player, has suit equipped, and is either a stalker or we allow non stalkers to use us...
+			if (m_bIsTouchingPlayer) {
+				//if touching a player...
+				if (m_pCharger && GetChargerJuice(m_pCharger) > 0) {
+					//if charger is valid and it's juice is greater then 0...
+					//DevMsg("Player SHOULD be charging now.\n");
+					FakeChargeEvent(pHL2Player);
+					m_bWasCharging = true;
+				}
+				else if (m_pCharger && m_bWasCharging) {
+					//If we were charging, and charger is valid, but charger is out of juice...
+					m_bWasCharging = false;
+					PlayEmptySound(m_pCharger);//make charger play deny sound once.
+				}
 			}
-			else if (m_pCharger && m_bWasCharging) {
-				//If we were charging, and charger is valid, but charger is out of juice...
+			else {
+				//Since player did not touch trigger, we are not charging anymore.
 				m_bWasCharging = false;
-				PlayEmptySound(m_pCharger);//make charger play deny sound once.
 			}
-		}
-		else {
-			//Since player did not touch trigger, we are not charging anymore.
-			m_bWasCharging = false;
 		}
 	}
 
