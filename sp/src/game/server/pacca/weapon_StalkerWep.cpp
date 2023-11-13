@@ -56,6 +56,7 @@ ConVar    sk_plr_dmg_stalkerwep_beam_hard	("sk_plr_dmg_stalkerwep_beam_hard", "0
 ConVar    sk_plr_stalkerwep_cooldown("sk_plr_stalkerwep_cooldown", "0", FCVAR_NONE, "Time to wait before laser can fire again.");
 ConVar    sk_plr_stalkerwep_freetime("sk_plr_stalkerwep_freetime", "0", FCVAR_NONE, "How long player can fire laser before it starts draining armor.");
 ConVar    sk_plr_stalkerwep_armordrain("sk_plr_stalkerwep_armordrain", "0", FCVAR_NONE, "How much armor to drain when firing laser for too long each think. A floating point value! Subtract every 0.01 seconds after laser is fired too long.");
+ConVar    sk_plr_stalkerwep_armordrain_growth("sk_plr_stalkerwep_armordrain_growth", "0", FCVAR_NONE, "How much to multiply armor drain by every 0.01 seconds after firing too long. Should be a number between 1 and 2, but can be anything bigger then 1.");
 
 //Pacca defines
 #define STALKERWEP_BEAMSPRITE_DIST	15
@@ -115,6 +116,7 @@ BEGIN_DATADESC(CWeaponStalkerWep)
 	DEFINE_FIELD(m_bPrimaryFireHeldLastFrame, FIELD_BOOLEAN),	//should be set to false when primary fire isn't active.
 	DEFINE_FIELD(m_fTimeSincePrimaryFireStarted, FIELD_FLOAT),	//set when player fires a laser for the first time this cooldown, used for armor drain.
 	DEFINE_FIELD(m_fArmorDrainFraction, FIELD_FLOAT),	//if this goes over 1, subtract 1 from armor and this. Allows us to pretend armor is a float.
+	DEFINE_FIELD(m_fArmorDrainRate, FIELD_FLOAT),	
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
@@ -221,14 +223,14 @@ void CWeaponStalkerWep::Think(void) {
 		//Bundled in with the light update system so it only runs every 0.01 seconds.
 		if (m_fTimeSincePrimaryFireStarted + sk_plr_stalkerwep_freetime.GetFloat() < gpGlobals->curtime && m_bPrimaryFireHeldLastFrame) {
 			//if time since we started firing laser + freetime for laser fire is LESS THEN curtime, AND we've been holding down primary fire the entire time...
+			
+			m_fArmorDrainFraction += m_fArmorDrainRate;	//add armor drain to armor drain tracker
+			m_fArmorDrainRate *= sk_plr_stalkerwep_armordrain_growth.GetFloat();	//increase armor drain rate for next frame
 
-			if (sk_plr_stalkerwep_armordrain.GetFloat() > 1) {
-				Warning("sk_plr_stalkerwep_armordrain is greater then 1! This should NEVER happen!\n");
-				Warning("setting sk_plr_stalkerwep_armordrain to 1. You should fix this properly though!\n");
-				sk_plr_stalkerwep_armordrain.SetValue("1");
+			if (m_fArmorDrainRate > 1) {
+				//Ensure drain rate never gets higher then 1.
+				m_fArmorDrainRate = 1;
 			}
-
-			m_fArmorDrainFraction += sk_plr_stalkerwep_armordrain.GetFloat();	//add armor drain to armor drain tracker
 
 			if (m_fArmorDrainFraction > 1) {
 				CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
@@ -237,7 +239,7 @@ void CWeaponStalkerWep::Think(void) {
 				if (pHL2Player != NULL) {
 					//if owner is an HL2 player...
 					m_fArmorDrainFraction -= 1;	//remove 1 from armor drain tracker
-					float fArmorValue = pHL2Player->ArmorValue();	//get armor value
+					int fArmorValue = pHL2Player->ArmorValue();	//get armor value
 					if (fArmorValue > 0) {
 						//if armor is greater then 0...
 						pHL2Player->SetArmorValue(fArmorValue - 1);	//drain 1 from armor
@@ -410,6 +412,14 @@ void CWeaponStalkerWep::PrimaryAttack()
 		//if primary fire was NOT used last time; this means this is the first time we've used the attack since last cooldown!
 		m_bPrimaryFireHeldLastFrame = true;	//player is firing! make sure cooldown code knows that.
 		m_fTimeSincePrimaryFireStarted = gpGlobals->curtime;	//save time we started firing.
+
+		if (sk_plr_stalkerwep_armordrain.GetFloat() > 1) {
+			Warning("sk_plr_stalkerwep_armordrain is greater then 1! This should NEVER happen!\n");
+			Warning("setting sk_plr_stalkerwep_armordrain to 1. You should fix this properly though!\n");
+			sk_plr_stalkerwep_armordrain.SetValue("1");
+		}
+
+		m_fArmorDrainRate = sk_plr_stalkerwep_armordrain.GetFloat();	//init armor drain rate to base drain rate.
 	}
 
 	// Only the player fires this way so we can cast

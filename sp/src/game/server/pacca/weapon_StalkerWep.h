@@ -85,6 +85,8 @@ public:
 	float			m_fTimeSincePrimaryFireStarted;	//set when player fires a laser for the first time this cooldown, used for armor drain.
 	float			m_fArmorDrainFraction;	//if this goes over 1, subtract 1 from armor and this. Allows us to pretend armor is a float.
 
+	float			m_fArmorDrainRate;	//Starts at base convar value, then grows gradually by growth convar value.
+
 private:
 	// Animation event handlers
 	void HandleAnimEventMeleeHit( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
