@@ -111,6 +111,10 @@ BEGIN_DATADESC(CWeaponStalkerWep)
 	DEFINE_FIELD(m_bPlayingHitFlesh, FIELD_FLOAT),
 	DEFINE_FIELD(m_fLightGlowLastUpdateTime, FIELD_FLOAT),
 	DEFINE_FIELD(m_pLightGlow, FIELD_CLASSPTR),
+	DEFINE_FIELD(m_iLastLaserFireEnded, FIELD_FLOAT),	//should be set to curtime when player releases attack1
+	DEFINE_FIELD(m_bPrimaryFireHeldLastFrame, FIELD_BOOLEAN),	//should be set to false when primary fire isn't active.
+	DEFINE_FIELD(m_fTimeSincePrimaryFireStarted, FIELD_FLOAT),	//set when player fires a laser for the first time this cooldown, used for armor drain.
+	DEFINE_FIELD(m_fArmorDrainFraction, FIELD_FLOAT),	//if this goes over 1, subtract 1 from armor and this. Allows us to pretend armor is a float.
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
