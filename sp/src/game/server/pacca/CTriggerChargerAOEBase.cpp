@@ -15,6 +15,9 @@ DEFINE_FIELD(m_pCharger, FIELD_EHANDLE),
 DEFINE_FIELD(m_bIsTouchingPlayer, FIELD_BOOLEAN),
 DEFINE_FIELD(m_bWasCharging, FIELD_BOOLEAN),
 
+DEFINE_OUTPUT(m_OnStartCharging, "OnStartCharging"),
+DEFINE_OUTPUT(m_OnStopCharging, "OnStopCharging"),
+
 END_DATADESC()
 
 void CTriggerChargerAOEBase::Spawn()
@@ -113,16 +116,24 @@ void CTriggerChargerAOEBase::Think() {
 					//if charger is valid and it's juice is greater then 0...
 					//DevMsg("Player SHOULD be charging now.\n");
 					FakeChargeEvent(pHL2Player);
+					if (!m_bWasCharging) {
+						//If wasn't charging last think...
+						m_OnStartCharging.FireOutput(pHL2Player, this);	//fire on start charging output
+					}
 					m_bWasCharging = true;
 				}
 				else if (m_pCharger && m_bWasCharging) {
 					//If we were charging, and charger is valid, but charger is out of juice...
 					m_bWasCharging = false;
 					PlayEmptySound(m_pCharger);//make charger play deny sound once.
+					m_OnStopCharging.FireOutput(pHL2Player, this);	//fire on stop charging output
 				}
 			}
 			else {
 				//Since player did not touch trigger, we are not charging anymore.
+				if (m_bWasCharging) {
+					m_OnStopCharging.FireOutput(pHL2Player, this);	//fire on stop charging output
+				}
 				m_bWasCharging = false;
 			}
 		}

@@ -34,4 +34,7 @@ public:
 	bool m_bWasCharging;
 
 	bool m_bAllowNonStalkerUse;
+
+	COutputEvent m_OnStartCharging;
+	COutputEvent m_OnStopCharging;
 };
