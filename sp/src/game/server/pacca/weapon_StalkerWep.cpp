@@ -45,12 +45,16 @@ static const Vector g_bludgeonMins(-BLUDGEON_HULL_DIM, -BLUDGEON_HULL_DIM, -BLUD
 static const Vector g_bludgeonMaxs(BLUDGEON_HULL_DIM, BLUDGEON_HULL_DIM, BLUDGEON_HULL_DIM);
 
 //special convars for us
-ConVar    sk_plr_dmg_stalkerwep_melee	( "sk_plr_dmg_stalkerwep_melee","0");
-ConVar    sk_npc_dmg_stalkerwep_melee	( "sk_npc_dmg_stalkerwep_melee","0");
+ConVar    sk_plr_dmg_stalkerwep_melee	( "sk_plr_dmg_stalkerwep_melee","0", FCVAR_NONE);
+ConVar    sk_npc_dmg_stalkerwep_melee	( "sk_npc_dmg_stalkerwep_melee","0", FCVAR_NONE);
 
-ConVar    sk_plr_dmg_stalkerwep_beam_easy	("sk_plr_dmg_stalkerwep_beam_easy", "0");
-ConVar    sk_plr_dmg_stalkerwep_beam_normal	("sk_plr_dmg_stalkerwep_beam_normal", "0");
-ConVar    sk_plr_dmg_stalkerwep_beam_hard	("sk_plr_dmg_stalkerwep_beam_hard", "0");
+ConVar    sk_plr_dmg_stalkerwep_beam_easy	("sk_plr_dmg_stalkerwep_beam_easy", "0", FCVAR_NONE);
+ConVar    sk_plr_dmg_stalkerwep_beam_normal	("sk_plr_dmg_stalkerwep_beam_normal", "0", FCVAR_NONE);
+ConVar    sk_plr_dmg_stalkerwep_beam_hard	("sk_plr_dmg_stalkerwep_beam_hard", "0", FCVAR_NONE);
+
+ConVar    sk_plr_stalkerwep_cooldown("sk_plr_stalkerwep_cooldown", "0", FCVAR_NONE, "Time to wait before laser can fire again.");
+ConVar    sk_plr_stalkerwep_freetime("sk_plr_stalkerwep_freetime", "0", FCVAR_NONE, "How long player can fire laser before it starts draining armor.");
+ConVar    sk_plr_stalkerwep_armordrain("sk_plr_stalkerwep_armordrain", "0", FCVAR_NONE, "How much armor to drain when firing laser for too long each think. Measured in 1/100th of an armor point.");
 
 //Pacca defines
 #define STALKERWEP_BEAMSPRITE_DIST	15
@@ -357,6 +361,13 @@ int CWeaponStalkerWep::WeaponMeleeAttack1Condition( float flDot, float flDist )
 //------------------------------------------------------------------------------
 void CWeaponStalkerWep::PrimaryAttack()
 {
+	if (gpGlobals->curtime < sk_plr_stalkerwep_cooldown.GetFloat() + m_iLastLaserFireEnded) {
+		//if curtime is LESS THEN cooldown time + time last laser ended...
+		return;	//don't fire while waiting on cooldown.
+	}
+
+	m_bPrimaryFireHeldLastFrame = true;	//player is firing! make sure cooldown code knows that.
+
 	// Only the player fires this way so we can cast
 	CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
 
@@ -795,6 +806,11 @@ void CWeaponStalkerWep::ItemPostFrame(void)
 	if ((pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime))
 	{
 		PrimaryAttack();
+	}
+	else if((!(pOwner->m_nButtons & IN_ATTACK)) && (m_flNextPrimaryAttack <= gpGlobals->curtime) && m_bPrimaryFireHeldLastFrame) {
+		//if player was not pressing attack, AND they had the option to fire this frame AND player was firing last chance they had...
+		m_bPrimaryFireHeldLastFrame = false;	//set held fire last frame to false. Player chose not to fire!
+		m_iLastLaserFireEnded = gpGlobals->curtime;	//set last time since player fired to right now.
 	}
 	
 	//split from if/else to allow simultaneous fire.

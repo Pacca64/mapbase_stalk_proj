@@ -80,6 +80,9 @@ public:
 
 	int				m_iLastKnownSkillLevel;	//Stores skill level from previous frame. Not saved; used only to change laser sprite.
 
+	float			m_iLastLaserFireEnded;	//should be set to curtime when player releases attack1
+	bool			m_bPrimaryFireHeldLastFrame;	//should be set to false when primary fire isn't active.
+
 private:
 	// Animation event handlers
 	void HandleAnimEventMeleeHit( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
