@@ -26,4 +26,6 @@ public:
 	CNewRecharge*	m_pCharger;
 	bool m_bIsTouchingPlayer;
 	bool m_bWasCharging;
+
+	bool m_bAllowNonStalkerUse;
 };

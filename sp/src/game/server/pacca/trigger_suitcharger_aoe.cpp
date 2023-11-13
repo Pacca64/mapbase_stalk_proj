@@ -12,6 +12,7 @@ DEFINE_ENTITYFUNC(StartTouch),
 DEFINE_ENTITYFUNC(EndTouch),
 
 DEFINE_KEYFIELD(m_sChargerName, FIELD_STRING, "charger"),
+DEFINE_KEYFIELD(m_bAllowNonStalkerUse, FIELD_BOOLEAN, "AllowNonStalkerUse"),
 DEFINE_FIELD(m_pCharger, FIELD_EHANDLE),
 DEFINE_FIELD(m_bIsTouchingPlayer, FIELD_BOOLEAN),
 DEFINE_FIELD(m_bWasCharging, FIELD_BOOLEAN),
@@ -102,7 +103,8 @@ void CTriggerSuitChargerAOE::Think() {
 	CBasePlayer* pPlayer = ToBasePlayer(UTIL_GetLocalPlayer());
 	CHL2_Player* pHL2Player = dynamic_cast<CHL2_Player*>(pPlayer);
 
-	if (pHL2Player && pPlayer->IsSuitEquipped()) {
+	if (pHL2Player && pPlayer->IsSuitEquipped() && (m_bAllowNonStalkerUse || pHL2Player->m_bIsStalker)) {
+		//If player is hl2 player, has suit equipped, and is either a stalker or we allow non stalkers to use us...
 		if (m_bIsTouchingPlayer) {
 			//if touching a player...
 			if (m_pCharger && m_pCharger->m_iJuice > 0) {
