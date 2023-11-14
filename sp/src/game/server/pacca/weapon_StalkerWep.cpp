@@ -652,7 +652,7 @@ void CWeaponStalkerWep::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseComb
 void CWeaponStalkerWep::DrawBeam(const Vector& startPos, const Vector& endPos, float width)
 {
 	//Tracer down the middle
-	UTIL_Tracer(startPos, endPos, 0, TRACER_DONT_USE_ATTACHMENT, 6500, false, "GaussTracer");
+	//UTIL_Tracer(startPos, endPos, 0, TRACER_DONT_USE_ATTACHMENT, 6500, false, "GaussTracer");
 
 	//Draw the main beam shaft
 	CBeam* pBeam = CBeam::BeamCreate("sprites/laser.vmt", 2.0);
