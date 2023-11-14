@@ -268,8 +268,11 @@ void CWeaponStalkerWep::Think(void) {
 	Vector AimDir = pPlayer->GetAutoaimVector(AUTOAIM_SCALE_DEFAULT);
 
 	startPos = startPos + AimDir * STALKERWEP_BEAMSPRITE_DIST;
-	m_pLightGlow->Teleport(&startPos,NULL,NULL);	//teleport light asap
-	m_pLightGlow->SetAbsOrigin(startPos);	//teleport light asap
+
+	if (m_pLightGlow) {
+		m_pLightGlow->Teleport(&startPos, NULL, NULL);	//teleport light asap
+		m_pLightGlow->SetAbsOrigin(startPos);	//teleport light asap
+	}
 }
 
 void CWeaponStalkerWep::OnPickedUp(CBaseCombatCharacter* pNewOwner) {
