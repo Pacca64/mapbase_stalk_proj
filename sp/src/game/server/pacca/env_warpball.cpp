@@ -58,9 +58,9 @@ DEFINE_KEYFIELD(m_cSpriteExplodeColor, FIELD_COLOR32, "ExplodeSpriteColor"),
 DEFINE_KEYFIELD(m_cSpriteGreenColor, FIELD_COLOR32, "FadeSpriteColor"),
 DEFINE_KEYFIELD(m_cBeamColor, FIELD_COLOR32, "BeamColor"),
 
-DEFINE_FIELD(m_pGlowExplode, FIELD_EHANDLE),
-DEFINE_FIELD(m_pGlowGreen, FIELD_EHANDLE),
-DEFINE_FIELD(m_pGlowExplode, FIELD_EHANDLE),
+DEFINE_FIELD(m_pGlowExplode, FIELD_CLASSPTR),
+DEFINE_FIELD(m_pGlowGreen, FIELD_CLASSPTR),
+DEFINE_FIELD(m_pGlowExplode, FIELD_CLASSPTR),
 
 DEFINE_FIELD(m_fTimeSinceEffectStarted, FIELD_FLOAT),
 DEFINE_FIELD(m_bSecondSoundPlayed, FIELD_BOOLEAN),
