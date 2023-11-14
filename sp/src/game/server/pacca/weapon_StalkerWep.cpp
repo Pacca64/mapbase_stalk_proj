@@ -707,7 +707,9 @@ void CWeaponStalkerWep::DrawBeam(const Vector& startPos, const Vector& endPos, f
 	//m_pLightGlow->TurnOn();
 
 	m_fLightGlowTrans = 200;	//make sprite visible again
-	m_pLightGlow->SetLocalOrigin(startPos);
+	if (m_pLightGlow) {
+		m_pLightGlow->SetLocalOrigin(startPos);
+	}
 }
 
 //Ported routines from npc_stalker
