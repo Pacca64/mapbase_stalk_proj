@@ -406,10 +406,12 @@ int CWeaponStalkerWep::WeaponMeleeAttack1Condition( float flDot, float flDist )
 //------------------------------------------------------------------------------
 void CWeaponStalkerWep::PrimaryAttack()
 {
+	/*
 	if (gpGlobals->curtime < sk_plr_stalkerwep_cooldown.GetFloat() + m_iLastLaserFireEnded) {
 		//if curtime is LESS THEN cooldown time + time last laser ended...
 		return;	//don't fire while waiting on cooldown.
 	}
+	*/
 
 	if (!m_bPrimaryFireHeldLastFrame) {
 		//if primary fire was NOT used last time; this means this is the first time we've used the attack since last cooldown!
@@ -869,7 +871,10 @@ void CWeaponStalkerWep::ItemPostFrame(void)
 	else if((!(pOwner->m_nButtons & IN_ATTACK)) && (m_flNextPrimaryAttack <= gpGlobals->curtime) && m_bPrimaryFireHeldLastFrame) {
 		//if player was not pressing attack, AND they had the option to fire this frame AND player was firing last chance they had...
 		m_bPrimaryFireHeldLastFrame = false;	//set held fire last frame to false. Player chose not to fire!
-		m_iLastLaserFireEnded = gpGlobals->curtime;	//set last time since player fired to right now.
+		//m_iLastLaserFireEnded = gpGlobals->curtime;	//set last time since player fired to right now.
+
+		//This seems to be how weapons are SUPPOSED to handle cooldowns.
+		m_flNextPrimaryAttack = gpGlobals->curtime + sk_plr_stalkerwep_cooldown.GetFloat();
 	}
 	
 	//split from if/else to allow simultaneous fire.
