@@ -87,6 +87,9 @@ public:
 
 	float			m_fArmorDrainRate;	//Starts at base convar value, then grows gradually by growth convar value.
 
+protected:
+	void CreateLaserSprite();
+
 private:
 	// Animation event handlers
 	void HandleAnimEventMeleeHit( animevent_t *pEvent, CBaseCombatCharacter *pOperator );

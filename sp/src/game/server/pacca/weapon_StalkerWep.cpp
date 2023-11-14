@@ -110,7 +110,7 @@ BEGIN_DATADESC(CWeaponStalkerWep)
 	DEFINE_FIELD(m_fNextDamageTime, FIELD_FLOAT),
 	DEFINE_FIELD(m_bPlayingHitWall, FIELD_FLOAT),
 	DEFINE_FIELD(m_bPlayingHitFlesh, FIELD_FLOAT),
-	DEFINE_FIELD(m_fLightGlowLastUpdateTime, FIELD_FLOAT),
+	DEFINE_FIELD(m_fLightGlowLastUpdateTime, FIELD_TIME),
 	DEFINE_FIELD(m_pLightGlow, FIELD_CLASSPTR),
 	DEFINE_FIELD(m_iLastLaserFireEnded, FIELD_FLOAT),	//should be set to curtime when player releases attack1
 	DEFINE_FIELD(m_bPrimaryFireHeldLastFrame, FIELD_BOOLEAN),	//should be set to false when primary fire isn't active.
@@ -277,7 +277,10 @@ void CWeaponStalkerWep::Think(void) {
 
 void CWeaponStalkerWep::OnPickedUp(CBaseCombatCharacter* pNewOwner) {
 	BaseClass::OnPickedUp(pNewOwner);
+	CreateLaserSprite();
+}
 
+void CWeaponStalkerWep::CreateLaserSprite() {
 	CBasePlayer* pPlayer = ToBasePlayer(GetOwner());
 
 	if (pPlayer == NULL)
@@ -711,6 +714,9 @@ void CWeaponStalkerWep::DrawBeam(const Vector& startPos, const Vector& endPos, f
 	m_fLightGlowTrans = 200;	//make sprite visible again
 	if (m_pLightGlow) {
 		m_pLightGlow->SetLocalOrigin(startPos);
+	}
+	else {
+		CreateLaserSprite();	//if light glow does not exist, recreate it.
 	}
 }
 
