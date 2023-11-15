@@ -30,7 +30,7 @@ class CTriggerPortal : public CBaseTrigger
 public:
 	DECLARE_DATADESC();
 	DECLARE_CLASS( CTriggerPortal, CBaseTrigger );
-	DECLARE_SERVERCLASS();
+	//DECLARE_SERVERCLASS();
 
 	virtual void Spawn( void );
 	virtual void Activate();
@@ -74,9 +74,11 @@ BEGIN_DATADESC( CTriggerPortal )
 	DEFINE_INPUTFUNC( FIELD_STRING, "SetRemotePortal", InputSetRemotePortal ),
 END_DATADESC()
 
+/*
 IMPLEMENT_SERVERCLASS_ST( CTriggerPortal, DT_TriggerPortal )
 	SendPropEHandle(SENDINFO(m_hRemotePortal)),
 END_SEND_TABLE()
+*/
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -275,7 +277,8 @@ void CTriggerPortal::DisableForIncomingEntity( CBaseEntity *pEntity )
 	// Start thinking, and remove the other as soon as it's not touching me.
 	// Needs to be done in addition to EndTouch, because entities may move fast
 	// enough through the portal to come out not touching the other portal.
-	SetContextThink( DisabledThink, gpGlobals->curtime + 0.1, TRIGGER_DISABLED_THINK );
+	//SetContextThink(DisabledThink, gpGlobals->curtime + 0.1, TRIGGER_DISABLED_THINK);
+	SetContextThink( &CTriggerPortal::DisabledThink, gpGlobals->curtime + 0.1, TRIGGER_DISABLED_THINK );
 }
 
 //-----------------------------------------------------------------------------
@@ -299,7 +302,8 @@ void CTriggerPortal::DisabledThink( void )
 		}
 	}
 
-	SetContextThink( DisabledThink, gpGlobals->curtime + 0.1, TRIGGER_DISABLED_THINK );
+	//SetContextThink( DisabledThink, gpGlobals->curtime + 0.1, TRIGGER_DISABLED_THINK );
+	SetContextThink(&CTriggerPortal::DisabledThink, gpGlobals->curtime + 0.1, TRIGGER_DISABLED_THINK);
 }
 
 //-----------------------------------------------------------------------------
