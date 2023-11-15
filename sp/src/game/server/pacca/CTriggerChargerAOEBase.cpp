@@ -138,6 +138,13 @@ void CTriggerChargerAOEBase::Think() {
 			}
 		}
 	}
+	else if (m_bWasCharging) {
+		//If player is full, and we were charging before...
+		m_OnStopCharging.FireOutput(pHL2Player, this);	//fire on stop charging output
+		m_bWasCharging = false;
+
+		//this nested if spider web is a nightmare. if this acts funny again, please kill it lol.
+	}
 
 	SetThink(&CTriggerChargerAOEBase::Think);
 	SetNextThink(gpGlobals->curtime + 0.01f);
