@@ -111,7 +111,7 @@ BEGIN_DATADESC(CWeaponStalkerWep)
 	DEFINE_FIELD(m_bPlayingHitWall, FIELD_FLOAT),
 	DEFINE_FIELD(m_bPlayingHitFlesh, FIELD_FLOAT),
 	DEFINE_FIELD(m_fLightGlowLastUpdateTime, FIELD_TIME),
-	DEFINE_FIELD(m_pLightGlow, FIELD_CLASSPTR),
+	DEFINE_FIELD(m_pLightGlow, FIELD_EHANDLE),
 	DEFINE_FIELD(m_iLastLaserFireEnded, FIELD_FLOAT),	//should be set to curtime when player releases attack1
 	DEFINE_FIELD(m_bPrimaryFireHeldLastFrame, FIELD_BOOLEAN),	//should be set to false when primary fire isn't active.
 	DEFINE_FIELD(m_fTimeSincePrimaryFireStarted, FIELD_FLOAT),	//set when player fires a laser for the first time this cooldown, used for armor drain.
@@ -132,6 +132,14 @@ CWeaponStalkerWep::CWeaponStalkerWep( void )
 	m_iLastKnownSkillLevel = g_pGameRules->GetSkillLevel();
 
 	m_fArmorDrainFraction = 0;
+
+	//This is done in the RPGs' constructor for it's red laser sprite.
+	//Hopefully this fixes the sprite becoming unlinked and accumulating at the map origin during transitions.
+	if (m_pLightGlow != NULL)
+	{
+		UTIL_Remove(m_pLightGlow);
+		m_pLightGlow = NULL;
+	}
 
 	SetThink(&CWeaponStalkerWep::Think);
 	SetNextThink(gpGlobals->curtime + 0.01);

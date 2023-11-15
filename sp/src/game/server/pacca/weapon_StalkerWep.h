@@ -74,7 +74,7 @@ public:
 
 	float				m_bPlayingHitWall;
 	float				m_bPlayingHitFlesh;
-	CSprite*			m_pLightGlow;
+	CHandle<CSprite>	m_pLightGlow;
 	float				m_fLightGlowTrans;
 	float				m_fLightGlowLastUpdateTime;
 
