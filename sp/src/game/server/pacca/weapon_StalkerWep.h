@@ -13,6 +13,7 @@
 #if defined( _WIN32 )
 #pragma once
 #endif
+#include <pacca/env_sprite_owned.h>
 
 #ifdef HL2MP
 #error weapon_StalkerWep.h must not be included in hl2mp. The windows compiler will use the wrong class elsewhere if it is.
@@ -66,6 +67,8 @@ public:
 	void UpdateOnRemove(void);
 
 	void ItemPostFrame(void);
+
+	CSpriteOwned* SpriteCreate(const char* pSpriteName, const Vector& origin, bool animate);
 
 	int	m_nBulletType;	//probably will go unused
 

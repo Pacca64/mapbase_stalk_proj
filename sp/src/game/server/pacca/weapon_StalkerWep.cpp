@@ -24,6 +24,7 @@
 #include "util_shared.h"	//for access to trace line
 #include "bspflags.h"	//for access to trace line flags
 #include "Sprite.h"		//sprites
+#include "env_sprite_owned.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -303,16 +304,16 @@ void CWeaponStalkerWep::CreateLaserSprite() {
 	switch (g_pGameRules->GetSkillLevel())
 	{
 	case SKILL_EASY:		//STALKER_BEAM_HIGH
-		m_pLightGlow = CSprite::SpriteCreate("sprites/redglow1.vmt", spritePos, FALSE);
+		m_pLightGlow = SpriteCreate("sprites/redglow1.vmt", spritePos, FALSE);
 		break;
 	case SKILL_MEDIUM:	//STALKER_BEAM_MED
-		m_pLightGlow = CSprite::SpriteCreate("sprites/orangeglow1.vmt", spritePos, FALSE);
+		m_pLightGlow = SpriteCreate("sprites/orangeglow1.vmt", spritePos, FALSE);
 		break;
 	case SKILL_HARD:
-		m_pLightGlow = CSprite::SpriteCreate("sprites/yellowglow1.vmt", spritePos, FALSE);
+		m_pLightGlow = SpriteCreate("sprites/yellowglow1.vmt", spritePos, FALSE);
 		break;
 	default:
-		m_pLightGlow = CSprite::SpriteCreate("sprites/redglow1.vmt", spritePos, FALSE);
+		m_pLightGlow = SpriteCreate("sprites/redglow1.vmt", spritePos, FALSE);
 		break;
 	}
 
@@ -325,6 +326,8 @@ void CWeaponStalkerWep::CreateLaserSprite() {
 	m_pLightGlow->SetRenderColorA(0);	//start light glow transparent so it doesn't immediately render for player
 	//m_pLightGlow->SetParent(pPlayer->GetViewModel(), -1);	//Parent sprite to viewmodel
 	//m_pLightGlow->TurnOn();
+
+	m_pLightGlow->SetOwnerEntity(this);	//make sure sprite knows we are it's owner. Hopefully fixes map transitions???
 }
 
 //-----------------------------------------------------------------------------
@@ -701,15 +704,15 @@ void CWeaponStalkerWep::DrawBeam(const Vector& startPos, const Vector& endPos, f
 	{
 	case SKILL_EASY:		//STALKER_BEAM_HIGH
 		pBeam->SetColor(255, 0, 0);
-		//m_pLightGlow = CSprite::SpriteCreate("sprites/redglow1.vmt", startPos, FALSE);
+		//m_pLightGlow = CSpriteOwned::SpriteCreate("sprites/redglow1.vmt", startPos, FALSE);
 		break;
 	case SKILL_MEDIUM:	//STALKER_BEAM_MED
 		pBeam->SetColor(255, 50, 0);
-		//m_pLightGlow = CSprite::SpriteCreate("sprites/orangeglow1.vmt", startPos, FALSE);
+		//m_pLightGlow = CSpriteOwned::SpriteCreate("sprites/orangeglow1.vmt", startPos, FALSE);
 		break;
 	case SKILL_HARD:
 		pBeam->SetColor(255, 150, 0);
-		//m_pLightGlow = CSprite::SpriteCreate("sprites/yellowglow1.vmt", startPos, FALSE);
+		//m_pLightGlow = CSpriteOwned::SpriteCreate("sprites/yellowglow1.vmt", startPos, FALSE);
 		break;
 	}
 
@@ -903,4 +906,18 @@ void CWeaponStalkerWep::ItemPostFrame(void)
 		WeaponIdle();
 		return;
 	}
+}
+
+//I can't make this a static function of CSpriteOwned for the life of me. Some LNK2019 shit. Google not helping. WHY???
+CSpriteOwned* CWeaponStalkerWep::SpriteCreate(const char* pSpriteName, const Vector& origin, bool animate)
+{
+	CSpriteOwned* pSprite = CREATE_ENTITY(CSpriteOwned, "env_sprite_owned");
+	pSprite->SpriteInit(pSpriteName, origin);
+	pSprite->SetSolid(SOLID_NONE);
+	UTIL_SetSize(pSprite, vec3_origin, vec3_origin);
+	pSprite->SetMoveType(MOVETYPE_NONE);
+	if (animate)
+		pSprite->TurnOn();
+
+	return pSprite;
 }
