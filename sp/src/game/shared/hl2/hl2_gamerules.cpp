@@ -2210,7 +2210,7 @@ CAmmoDef *GetAmmoDef()
 #endif
 
 		def.AddAmmoType("stalker_energy", DMG_ENERGYBEAM, TRACER_BEAM, "sk_plr_dmg_stalkerwep", "sk_npc_dmg_stalkerwep", "sk_max_stalkerwep", BULLET_IMPULSE(150, 1225), 0);
-		def.AddAmmoType("flare", DMG_BURN, TRACER_NONE, "sk_plr_dmg_flare_round", "sk_npc_dmg_flare_round", "sk_max_flare_round", 0, 0);
+		def.AddAmmoType("FlareRound", DMG_BURN, TRACER_NONE, "sk_plr_dmg_flare_round", "sk_npc_dmg_flare_round", "sk_max_flare_round", 0, 0);
 	}
 
 	return &def;
